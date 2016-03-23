@@ -1,64 +1,49 @@
 /***************************************************************
-	PROMENNE
+	VARIABLES
 ***************************************************************/
-//Moznno smazat!
-//var data;					//data bunek
-//var scalerX = 12;			//rozpeti na ose X
-//var lifeTime = false;	
-
-var w = 1000;				//šířka grafu
-var h = 0;					//výška grafu
-var margin = 50;			//okraj SVG
+var maxTime = 0;			//Maximalni doba zaznamu
+var margin = 50;			//okraj SVG - menitelny v ramci scales!
+var marginX = 50;			//margin for X - nemenitelny
 var polomer = 7;			//polomer kruhu
 var stroke = 3;				//sirka linek
-
-var maxTime = 0;			//Maximalni doba zaznamu
+var scaler = 50;			//rozpeti na osach
+var positionLine = 0;		//position of line
 
 var cells = []; 			//seznam objektu bunek
 var datacells = [];			//pro ulozeni bunecnych poli
 var lifeGraphCells = [];	//array for storing cells for lifeGraph
-
-var scaler = 50;			//rozpeti na osach
-
-var positionLine = 0;
-var marginX = 50;
 
 //variables for info about states of cells
 var begin = 0;
 var mitosis = 0;
 var death = 0;
 
+//zmenit nazev!
 var posunuti = 10;		//Posunuti hodnot v life graphu vedle poctu ZIJE, SMRT, MITOSA...
 
 //nastaveni
-var changeMaxTime = false;
-var showNoChild = false;				//Nezobrazi bunky, ktere nemaji potomky
-var showFrom = 0;						//Zobrazeni od
-var showTo = 0;							//Zobrazeni do
+var isVertical = false;					//is vertical display choosed>
+var changeMaxTime = false;				//should i change maxTime?
+var showFrom = 0;						
+var showTo = 0;							
 var everywhereAxis = false;				//Zobrazeni osy u kazdeho grafu				
 var destroySVG = false;					
 var smallVisualisation = false;
 var showLifeLengthText = true;	
-var textHeight = "12px";
+var textHeight = "12px";				
 var margLife = 60;						//Okraj pro LifeGraph
 
-var linearScaleX;						//Linearni scale pro osu X
-var linearScaleY;
+var linearScaleX;						//Linear scale for X axis
+var linearScaleY;						//Linear scale for y axis
 var graphBoxWidth = 1000;				//Sirka grafu s rodokmeny
-var graphBoxHeightVertical = 800;		//Height of graph box for vertical display
+var graphBoxHeightVertical = 900;		//Height of graph box for vertical display
 
-/*
-//Ziskani dat lokálně
-d3.text("data/tracks-2015-06-25-II.txt", function(error, textString){
-	parseData(textString);
-	horizontal();	
-	sliderManager();			
-});*/
+
 
 /**************************************************************
-	NAČTENÍ DAT 
+	LOAD DATA
 ***************************************************************/
-
+//Load data from input
 function readSingleFile(e) {
   	var file = e.target.files[0];
   	if (!file) {
@@ -81,131 +66,6 @@ function readSingleFile(e) {
 //Reakce na nahrani souboru 
 document.getElementById('file-input')
   .addEventListener('change', readSingleFile, false);
-
-
-/**************************************************************
-   FUNKCE NA TLACITKA
-***************************************************************/	
-
-function vertical(){
-	showNoChild = false;
-	displayVertical();
-}
-
-function horizontal(){	
-	showNoChild = false;
-	everywhereAxis = false;	
-	showFrom = 0;
-	showTo = maxTime;
-	displayHorizontal();
-}
-
-function noChildren(){
-	showNoChild = !showNoChild;
-	displayHorizontal();
-}
-
-function axisEverywhere(){
-	everywhereAxis = !everywhereAxis;
-	displayHorizontal();
-}	
-
-function changeScales(){
-	smallVisualisation = !smallVisualisation;
-	if(smallVisualisation){
-		scaler = 10;
-		polomer = 2;
-		stroke = 1;
-		showLifeLengthText = false;
-		
-		margin = 10;
-	}
-	else{
-		scaler = 50;
-		polomer = 7;
-		stroke = 3;
-		showLifeLengthText = true;
-		
-		margin = 50;
-	}
-	displayHorizontal();
-}
-
-function change(){
-	displayHorizontal();
-}
-
-function sortByTime(){
-	cells.sort(function(a,b){
-		var keyA = a.begin;
-		var keyB = b.begin;
-		if(keyA < keyB) return -1;
-    	if(keyA > keyB) return 1;
-    	if(keyA == keyB) {
-    		var keyC = a.id;
-			var keyD = b.id;
-			if(keyC < keyD) return -1;
-    		if(keyC > keyD) return 1;
-    		return 0;    		
-    	}
-	})
-	displayHorizontal();
-}
-
-function sortById(){
-	cells.sort(function(a,b){
-		var keyA = a.id;
-		var keyB = b.id;
-		if(keyA < keyB) return -1;
-    	if(keyA > keyB) return 1;
-    	return 0;     	
-	})
-	displayHorizontal();
-}
-
-function lifeText(){
-	showLifeLengthText = !showLifeLengthText;
-	displayHorizontal();
-}
-
-//Funkce, ktera vytvori Slider
-function sliderManager(){
-
-	//Vymaze predchozi slider, pokud tam je
-	d3.select('#handle-one').remove();
-	d3.select('#handle-two').remove();
-	d3.select('#sliderRange').remove();
-
-	//Vytvori novy slider
-	d3.select('#slider').call(d3.slider().value([0,maxTime]).max(maxTime).step(1)
-						.on("slide", function(evt, value){
-
-							d3.select('#textMin').text(value[0]);
-							showFrom = value[0];
-							d3.select('#textMax').text(value[1]);
-							showTo = value[1];
-							
-							d3.selectAll(".superCell").each(function(d, i){	
-								
-								if(this.__data__ < showFrom || this.__data__ > showTo){
-									d3.select(this).classed("superCell", false);
-									d3.select(this).classed("hide", true);
-								}
-							})
-
-							d3.selectAll(".hide").each(function(d, i){
-								if(this.__data__ >= showFrom && this.__data__ <= showTo){
-									d3.select(this).classed("hide", false);
-									d3.select(this).classed("superCell", true);
-									
-								}
-							})
-						}));
-}
-
-/**************************************************************
-   ZÍSKÁNÍ DAT ZE SOUBORU 
-***************************************************************/
 
 //Funkce, ktera ze vstupniho textoveho retezce (souboru), vyparsuje data bunek do objektu k pozdejsimu vyuziti
 //@param 	text 	string celeho textoveho souboru track.txt
@@ -297,6 +157,147 @@ function findParent(parentID, cell, celles){
 	}
 }
 
+
+
+/**************************************************************
+   BUTTONS
+***************************************************************/	
+
+function vertical(){
+	showFrom = 0;
+	showTo = maxTime;
+	isVertical = true;
+	display();
+}
+
+function horizontal(){
+	isVertical = false;	
+	everywhereAxis = false;	
+	showFrom = 0;
+	showTo = maxTime;
+	display();
+}
+
+function axisEverywhere(){
+	everywhereAxis = !everywhereAxis;
+	display();
+}	
+
+function changeScales(){
+	smallVisualisation = !smallVisualisation;
+	if(smallVisualisation){
+		scaler = 10;
+		polomer = 2;
+		stroke = 1;
+		showLifeLengthText = false;
+		
+		margin = 10;
+	}
+	else{
+		scaler = 50;
+		polomer = 7;
+		stroke = 3;
+		showLifeLengthText = true;
+		
+		margin = 50;
+	}
+
+	display();
+}
+
+function change(){
+	display();
+}
+
+function display(){
+	if(isVertical){
+		displayVertical();
+	} else{
+		displayHorizontal();
+	}
+}
+
+function sortByTime(){
+	cells.sort(function(a,b){
+		var keyA = a.begin;
+		var keyB = b.begin;
+		if(keyA < keyB) return -1;
+    	if(keyA > keyB) return 1;
+    	if(keyA == keyB) {
+    		var keyC = a.id;
+			var keyD = b.id;
+			if(keyC < keyD) return -1;
+    		if(keyC > keyD) return 1;
+    		return 0;    		
+    	}
+	})
+
+	display();
+}
+
+function sortById(){
+	cells.sort(function(a,b){
+		var keyA = a.id;
+		var keyB = b.id;
+		if(keyA < keyB) return -1;
+    	if(keyA > keyB) return 1;
+    	return 0;     	
+	})
+	display();
+}
+
+function sortByIdSmth(cells){
+	cells.sort(function(a,b){
+		var keyA = a.id;
+		var keyB = b.id;
+		if(keyA < keyB) return -1;
+    	if(keyA > keyB) return 1;
+    	return 0;     	
+	})	
+}
+
+function lifeText(){
+	showLifeLengthText = !showLifeLengthText;
+	display();
+}
+
+//Funkce, ktera vytvori Slider
+function sliderManager(){
+
+	//Vymaze predchozi slider, pokud tam je
+	d3.select('#handle-one').remove();
+	d3.select('#handle-two').remove();
+	d3.select('#sliderRange').remove();
+
+	//Vytvori novy slider
+	d3.select('#slider').call(d3.slider().value([0,maxTime]).max(maxTime).step(1)
+						.on("slide", function(evt, value){
+
+							d3.select('#textMin').text(value[0]);
+							showFrom = value[0];
+							d3.select('#textMax').text(value[1]);
+							showTo = value[1];
+							
+							d3.selectAll(".superCell").each(function(d, i){	
+								
+								if(this.__data__ < showFrom || this.__data__ > showTo){
+									d3.select(this).classed("superCell", false);
+									d3.select(this).classed("hide", true);
+								}
+							})
+
+							d3.selectAll(".hide").each(function(d, i){
+								if(this.__data__ >= showFrom && this.__data__ <= showTo){
+									d3.select(this).classed("hide", false);
+									d3.select(this).classed("superCell", true);
+									
+								}
+							})
+						}));
+}
+
+
+
 /**************************************************************
    HORIZONTÁLNÍ VYKRESLENÍ
 ***************************************************************/
@@ -304,17 +305,16 @@ function findParent(parentID, cell, celles){
 //Funkce, ktera zajisti, aby se vse vykreslilo Horizontalne
 function displayHorizontal(){
 	d3.selectAll("svg").remove();		
-
-	var xTime = maxTime;					//maximalni doba v grafu	
-	var m = 0;								//promenna pro pruchod cyklem
+	
+	var m = 0;							
 
 	linearScaleX = d3.scale.linear()								//Priprava linearScale pro osu X
-						.domain([0, xTime])
+						.domain([0, maxTime])
 						.range([0, graphBoxWidth - marginX]);
 	
 	//Vykresli pouze hlavni osu
-	if(!everywhereAxis){
-		displayXAxis(xTime);		
+	if(!everywhereAxis || smallVisualisation){
+		displayXAxis();		
 	}
 
 	//Vytvori prazdny SVG, aby se to vyrovnalo
@@ -322,18 +322,12 @@ function displayHorizontal(){
 
 	//Vykresleni vsech bunecnych populaci
 	for(m; m < cells.length; m++){
-		//nastvaveni, ze se ma smazat pro pripad, ze se nevzkresli zadna bunka
+		//nastvaveni, ze se ma smazat pro pripad, ze se nevykresli zadna bunka
 		destroySVG = true;
 
-		/*
-		//Nezobrazi populace, ktere nemaji potomky	
-		if(showNoChild && (cells[m].children.length == 0)){
-			continue;
-		}*/	
-
-		var depth = depthFinder(cells[m]);								//zjistim hloubku populace, abych mohl spravne vetvit
+		var depth = depthFinder(cells[m]);							
 		
-		h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu	
+		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu	
 		
 		//Vytvoreni SVG containeru
 		var svgContainer = d3.select("body").select(".graphBox").append("svg")
@@ -348,15 +342,15 @@ function displayHorizontal(){
 			svgContainer.remove();
 		} else{
 			//Vykresleni vlastni osy k dane populaci
-			if(everywhereAxis){
-				displayEverywhereXAxis(xTime);
+			if(everywhereAxis && !smallVisualisation){
+				displayEverywhereXAxis(maxTime);
 			}
 		}
 	}
 	getAdditionalData(positionLine);		
 }
 
-//Funkce, ktera zjisti hloubku dane bunecne populace
+//Funkce, ktera zjisti hloubku dane bunecne populace, pro spravne vetveni a zobrazeni v grafu
 //@param 	cell 	bunecna populace, ve ktere to hledam
 function depthFinder(cell){
 	if(cell.children.length != 0){						//pokud ma potomky
@@ -417,7 +411,7 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
                         	.attr("stroke", "black"); 
 
         //Vykresleni doby zivota
-        if(showLifeLengthText){
+        if(showLifeLengthText && !smallVisualisation){
         	var timeDisplay = superCell.append("text")
     							.text(cell.end - cell.begin)
     							.attr("x", linearScaleX((cell.end - cell.begin)/2 + cell.begin))
@@ -463,7 +457,7 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
    	if(cell.children.length != 0){											//pokud ma bunka potomky, vykreslim je 				
 		if(shown){							//Pokud se vykreslila aktuani bunka, spojim	s potomky
 			if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){		
-				connectParentChild(positionY, cell, superCell, -repairer);
+				connectParentChildHorizontal(positionY, cell, superCell, -repairer);
 			}
 		}
 			
@@ -472,7 +466,7 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
 		} else{
 			if(shown){
 				if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
-					connectParentChild(positionY, cell, superCell, repairer);
+					connectParentChildHorizontal(positionY, cell, superCell, repairer);
 				}
 			}
 			displayHorizontalPopulation(cell.children[0], positionY - repairer, container, repairer/2);
@@ -535,16 +529,16 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
 function displayBlock(){
 	var svgBlok = d3.select("body").select(".graphBox").append("svg")
 									.attr("width", graphBoxWidth)
-									.attr("height", 60);											
+									.attr("height", 30);											
 }
 
 //Funkce, ktera vykresli hlavni osu X
 //@param	xTime	celkova doba (tzn. jak siroka ma osa byt)
-function displayXAxis(xTime){
+function displayXAxis(){
 
 	//Scale pro osu
 	var xScale = d3.scale.linear()
-						.domain([0, xTime])
+						.domain([0, maxTime])
 						.range([0, graphBoxWidth - marginX]);
 
 	//Scale pro linku
@@ -607,9 +601,9 @@ function line(position, svgAxis){
 
 //Funkce, ktera vykresli osu k dane populaci
 //@param 	xTime	celkova doba, tzn. sirka osy
-function displayEverywhereXAxis(xTime){
+function displayEverywhereXAxis(){
 	var xScale = d3.scale.linear()
-						.domain([0, xTime])
+						.domain([0, maxTime])
 						.range([0, graphBoxWidth - marginX]);	
 
 	var svgAxis = d3.select("body").select(".graphBox").append("svg")
@@ -652,7 +646,7 @@ function getChildrenText(parent){
 //@param 	cell 		bunka, ze ktere vznikly nove bunky
 //@param	container 	svg, do ktereho linku vlozit
 //@param	repairer	Y souradnice konce linky
-function connectParentChild(positionY, cell, container, repairer){
+function connectParentChildHorizontal(positionY, cell, container, repairer){
 	var anotherLine = container.append("line")
 									.on("mouseover", function() {
         								d3.select(this).classed("hover", true);
@@ -668,235 +662,15 @@ function connectParentChild(positionY, cell, container, repairer){
                         			.attr("stroke", "black");
 }
 
-//Function will save info about cell in certain time 
-//@param	cell 		cell we want to know info about
-//@param	position 	in what time we want to know what is happening
-function checkCell(cell, position){
-	//was cell born?
-	if(cell.begin == position){
-			begin++;
-	}
-
-	//Or was it its death or mitosis?
-	else if((cell.end == position) && (cell.end != maxTime)){
-		if(cell.children.length > 0){
-			mitosis++;
-		}
-		else{
-			death++;
-		}
-	}
-
-	//or was it alive?
-	else if((position > cell.begin) && (position < cell.end)){	
-		lifeGraphCells.push(cell);
-	}
-
-
-	//check what happend to its children
-	else{		
-		if((cell.children.length > 0) && (position > cell.end)){
-			var d = 0;
-			for(d; d<cell.children.length; d++){
-				checkCell(cell.children[d], position);
-			}
-		}
-	}
-}
-
-//Function will get info about all cells in certain time and show the graph of states and graph of lives of living cells
-//@param 	position 	in what time we want to the info
-function getAdditionalData(position){
-	begin = 0;
-	mitosis = 0;
-	death = 0;
-	var c = 0;
-	
-	while(lifeGraphCells.length > 0){
-		lifeGraphCells.pop();
-	}
-
-	//we will chceck all cells and get the data
-	for(c; c < cells.length; c++){
-		checkCell(cells[c], position);
-	}	
-
-	var datas = [begin, death, mitosis, lifeGraphCells.length];		//info about possible states
-	var description = ["BEGIN", "DEATH", "MITOSIS", "ALIVE"];
-	var colors = ["blue", "red", "green", "black"];
-
-	d3.selectAll(".stats").remove();
-
-	//creating svg of graph of states
-	var life = d3.select("body").select(".interestingInfo").append("svg")
-					.attr("width", 350)
-					.attr("height", 105)
-					.attr("class", "stats");
-
-	//display bars of states
-	for(var i = 0; i < 4; i++){
-		life.append("rect")
-			.attr("x", 25 + margLife + posunuti)
-			.attr("y", (i * 25) + 5 )
-			.attr("width", 5 * datas[i])
-			.attr("height", 20)
-			.attr("fill", colors[i])
-
-		life.append("text")
-				.text(datas[i])
-				.attr("x", posunuti + margLife)
-				.attr("y", (i * 25) + 20)
-				.attr("font-family", "sans-serif")
-				.attr("font-size", 15)
-				.attr("fill", "black");	
-
-		life.append("text")
-				.text(description[i])
-				.attr("x", 5)
-				.attr("y", (i * 25) + 20 )
-				.attr("font-family", "sans-serif")
-				.attr("font-size", 15)
-				.attr("fill", "black");	
-	}
-
-	/*
-	life.append("rect")			
-			.attr("x", 25 + margLife + posunuti)
-			.attr("y", 80)
-			.attr("width", 5 * datas[3])
-			.attr("height", 20)		
-			.attr("fill", colors[3]);
-
-	life.append("text")
-			.text(datas[3])
-			.attr("x", posunuti + margLife)
-			.attr("y", (3 * 25) + 20)
-			.attr("font-family", "sans-serif")
-			.attr("font-size", 15)
-			.attr("fill", "black");	
-
-	life.append("text")
-				.text(description[3])
-				.attr("x", 5)
-				.attr("y", (3 * 25) + 20)
-				.attr("font-family", "sans-serif")
-				.attr("font-size", 15)
-				.attr("fill", "black");	
-	*/
-
-	//Display life Graph of living cells
-	d3.select('#deleteLife').remove();
-	if(lifeGraphCells.length != 0){
-		displayLifeGraph();
-	}
-}
-
-//Function will display life graph of Living cells in certain time
-function displayLifeGraph(){
-	var c = 0;
-	var lifeLinearX = d3.scale.linear().domain([0, maxTime]).range([0, 310]);
-	var lifeLinearY = d3.scale.linear().domain([0, 900]).range([0, 600]);	
-
-	var lifeGraph = d3.select("body").select(".lifeGraph").append("svg")
-						.attr("height",  700)
-						.attr("class", "lifeGraph")
-						.attr("id", "deleteLife");
-
-	//we will display life of every living cell (array of lifeGraphCells)
-	for(c; c < lifeGraphCells.length; c++){
-		var lifeContainer = lifeGraph.append("g").attr("class", "cellLife");
-
-		var idText = lifeContainer.append("text")
-										.text(lifeGraphCells[c].id + ": ")
-										.attr("x", 5)
-			   							.attr("y", lifeLinearY(c * 20 + 5) +20)
-			   							.attr("font-family", "sans-serif")
-   										.attr("font-size", textHeight);
-
-		var lifeLine = lifeContainer.append("line")
-						.attr("x1", function(){
-							return lifeLinearX(lifeGraphCells[c].begin) + 20 + margLife;
-						})
-						.attr("y1", function(){
-							return lifeLinearY(c * 20 + 5) + 15;
-						})
-						.attr("x2", function(){
-							return lifeLinearX(lifeGraphCells[c].end) +20 + margLife;
-						})
-						.attr("y2", function(){
-							return lifeLinearY(c * 20 + 5) +15;
-						})
-						.attr("stroke-width", 1)
-						.attr("stroke", "black");
-
-		var lifeBegin = lifeContainer.append("line")
-						.attr("x1",function(){
-							return lifeLinearX(lifeGraphCells[c].begin) + 20 + margLife;
-						})
-						.attr("y1", function(){
-							return lifeLinearY(c * 20 + 5) +10;
-						})
-						.attr("x2",function(){
-							return lifeLinearX(lifeGraphCells[c].begin) + 20 + margLife;
-						})
-						.attr("y2", function(){
-							return lifeLinearY(c * 20 + 5) +20;
-						})
-						.attr("stroke-width", 1)
-						.attr("stroke", "black");
-
-		var lifeBeginText = lifeContainer.append("text")
-										.text(lifeGraphCells[c].begin)
-										.attr("x", lifeLinearX(lifeGraphCells[c].begin) - 5 + margLife)
-			   							.attr("y", lifeLinearY(c * 20 + 5) +20)
-			   							.attr("font-family", "sans-serif")
-   										.attr("font-size", textHeight);
-
-		var lifeEnd = lifeContainer.append("line")
-						.attr("x1",function(){
-							return lifeLinearX(lifeGraphCells[c].end) +20 + margLife;
-						})
-						.attr("y1", function(){
-							return lifeLinearY(c * 20 + 5) +10;
-						})
-						.attr("x2",function(){
-							return lifeLinearX(lifeGraphCells[c].end) +20 + margLife;
-						})
-						.attr("y2", function(){
-							return lifeLinearY(c * 20 + 5) +20;
-						})
-						.attr("stroke-width", 1)
-						.attr("stroke", "black");	
-
-		var lifeEndText = lifeContainer.append("text")
-										.text(lifeGraphCells[c].end)
-										.attr("x", lifeLinearX(lifeGraphCells[c].end) + 25 + margLife)
-			   							.attr("y", lifeLinearY(c * 20 + 5) +20)
-			   							.attr("font-family", "sans-serif")
-   										.attr("font-size", textHeight);	
-	}
-
-	var wholeLine = lifeContainer.append("line")
-							.attr("x1", function(){
-								return lifeLinearX(positionLine) + 20 + margLife;
-							})
-							.attr("y", function(){return lifeLinearY(0);})
-							.attr("x2", function(){return lifeLinearX(positionLine) + 20 + margLife;})
-							.attr("y2", function(){return lifeLinearY(1200);})
-							.attr("stroke-width", 1)
-							.attr("stroke", "purple");
-}
 
 
 /**************************************************************
-   VERTIKALNI ZOBRAZENI
+   VERTICAL DISPLAY
 ***************************************************************/
 
-//Vertikalni zobrazeni / bude treba jeste cele predelat
 function displayVertical(){	
 	d3.selectAll("svg").remove();
-	displayBlock();	
-
+	
 	var m = 0;
 
 	linearScaleY = d3.scale.linear()							//scaler for vertical display
@@ -908,10 +682,10 @@ function displayVertical(){
 
 		var depth = depthFinder(cells[m]);	
 
-		w = Math.pow(2,  depth) * scaler - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu					
+		var w = Math.pow(2,  depth) * scaler - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu					
 
 		//Vytvoreni SVG containeru
-		var svgContainer = d3.select("body").append("svg")
+		var svgContainer = d3.select("body").select(".graphBox").append("svg")
 											.attr("width", w - margin*(depth-1))
 											.attr("height", graphBoxHeightVertical);
 
@@ -920,19 +694,6 @@ function displayVertical(){
 		if(destroySVG){
 			svgContainer.remove();
 		}
-		/*	
-		//promenne pro osy
-		var yAxis = d3.svg.axis()
-						  .scale(yScale)
-						  .orient("right")
-						  .ticks(30);
-				
-		//vykresleni x osy
-		svgContainer.append("g")
-					.attr("class", "axis")
-					.attr("transform", "translate("+ (w - 20) +"," + margin/2 +")")
-					.call(yAxis);
-		*/
 		getAdditionalData(positionLine);
 	}
 }
@@ -960,11 +721,11 @@ function displayPopulationV(cell, positionX, container, repairer){
 							.attr("stroke-width", stroke)
                         	.attr("stroke", "black");
 
-        if(showLifeLengthText){
+        if(showLifeLengthText && !smallVisualisation){
         	var timeDisplay = superCell.append("text")
         						.text(cell.end - cell.begin)
     							.attr("x", positionX + 5)
-    							.attr("y", linearScaleY((cell.end - cell.begin)/2) + cell.begin)
+    							.attr("y", linearScaleY((cell.end - cell.begin)/2 + cell.begin))
     							.attr("font-family", "sans-serif")
    								.attr("font-size", "12px")
    								.attr("id", "life" + cell.id);  
@@ -987,7 +748,7 @@ function displayPopulationV(cell, positionX, container, repairer){
     													.html("Cell ID: " + cell.id + "<br/>Begin time: " + cell.begin + "<br/>Death / mitosis: " + cell.end + "<br/>Parent: " + cell.parentID + "<br/>Children: " + childrenText)
     								})
 									.attr("cx", positionX)
-									.attr("cy", linearScaleY(cell.begin)+ margin/2)
+									.attr("cy", linearScaleY(cell.begin)+ marginX/2)
 			   						.attr("r", polomer)
 			   						.attr("fill", "blue");
 
@@ -995,8 +756,8 @@ function displayPopulationV(cell, positionX, container, repairer){
 		//vykresleni ID bunky u pocatecniho bodu
 			var description = superCell.append("text")
 									.text(cell.id)
-			   						.attr("x", positionX + 2)
-			   						.attr("y", linearScaleY(cell.begin) + 2)
+			   						.attr("x", positionX)
+			   						.attr("y", linearScaleY(cell.begin + 2) )
 			   						.attr("font-family", "sans-serif")
    									.attr("font-size", "10px")
    									.attr("fill", "red");
@@ -1011,7 +772,7 @@ function displayPopulationV(cell, positionX, container, repairer){
 		}
 
 		if(cell.children.length == 1){
-			displayPopulationV(cell.children[0], positionY - repairer, container, repairer/2);
+			displayPopulationV(cell.children[0], positionX - repairer, container, repairer/2);
 		} else{
 			if(shown){
 				if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
@@ -1037,7 +798,7 @@ function displayPopulationV(cell, positionX, container, repairer){
     													.html("Mitotis of cell: " + cell.id + "<br/>Time: " + cell.end + "<br/>New cells: " + childrenText)
     								})								
 									.attr("cx", positionX)
-									.attr("cy", linearScaleY(cell.end) + margin/2)
+									.attr("cy", linearScaleY(cell.end) + marginX/2)
 			   						.attr("r", polomer)
 			   						.attr("fill", "green")
 			   						.append("title")
@@ -1063,7 +824,7 @@ function displayPopulationV(cell, positionX, container, repairer){
     													.html("Death: " + cell.id + "<br/>Time: " + cell.end)
     						})
 							.attr("cx", positionX)
-							.attr("cy", linearScaleY(cell.end) + margin/2)
+							.attr("cy", linearScaleY(cell.end) + marginX/2)
 			   				.attr("r", polomer)
 			   				.attr("fill", "#993333")
 			   				.append("title")
@@ -1095,4 +856,206 @@ function connectParentChildVertical(positionX, cell, container, repairer){
 									.attr("y2", linearScaleY(cell.end + 1) + marginX/2)
 									.attr("stroke-width", stroke)
                         			.attr("stroke", "black");
+}
+
+/**************************************************************
+   GGRAPH OF STATES + LIFE GRAPH
+***************************************************************/
+
+//Function will get info about all cells in certain time and show the graph of states and graph of lives of living cells
+//@param 	position 	in what time we want to the info
+function getAdditionalData(position){
+	begin = 0;
+	mitosis = 0;
+	death = 0;
+	var c = 0;
+	
+	while(lifeGraphCells.length > 0){
+		lifeGraphCells.pop();
+	}
+
+	//we will chceck all cells and get the data
+	for(c; c < cells.length; c++){
+		checkCell(cells[c], position);
+	}	
+
+	var dataStates = [begin, death, mitosis, lifeGraphCells.length];		//info about possible states
+	var description = ["BIRTH", "DEATH", "MITOSIS", "ALIVE"];
+	var colors = ["blue", "red", "green", "black"];
+
+	d3.selectAll(".stats").remove();
+
+	//creating svg of graph of states
+	var life = d3.select("body").select(".interestingInfo").append("svg")
+					.attr("width", 350)
+					.attr("height", 105)
+					.attr("class", "stats");
+
+	//display bars of states
+	for(var i = 0; i < 4; i++){
+		life.append("rect")
+			.attr("x", 25 + margLife + posunuti)
+			.attr("y", (i * 25) + 5 )
+			.attr("width", 5 * dataStates[i])
+			.attr("height", 20)
+			.attr("fill", colors[i])
+
+		life.append("text")
+				.text(dataStates[i])
+				.attr("x", posunuti + margLife)
+				.attr("y", (i * 25) + 20)
+				.attr("font-family", "sans-serif")
+				.attr("font-size", 15)
+				.attr("fill", "black");	
+
+		life.append("text")
+				.text(description[i])
+				.attr("x", 5)
+				.attr("y", (i * 25) + 20 )
+				.attr("font-family", "sans-serif")
+				.attr("font-size", 15)
+				.attr("fill", "black");	
+	}	
+
+	//Display life Graph of living cells
+	d3.select('#deleteLife').remove();
+	if(lifeGraphCells.length != 0){
+		displayLifeGraph();
+	}
+}
+
+//Function will display life graph of living cells in certain time
+function displayLifeGraph(){
+	var c = 0;
+	var lifeLinearX = d3.scale.linear().domain([0, maxTime]).range([0, 310]);
+
+	sortByIdSmth(lifeGraphCells);	
+
+	var lifeHeight = lifeGraphCells.length*20 + 20;
+
+	var lifeGraph = d3.select("body").select(".lifeGraph").append("svg")
+						.attr("width", 430)
+						.attr("height",  lifeHeight)
+						.attr("class", "lifeGraphg")
+						.attr("id", "deleteLife");
+
+	//we will display life of every living cell (array of lifeGraphCells)
+	for(c; c < lifeGraphCells.length; c++){
+		var lifeContainer = lifeGraph.append("g").attr("class", "cellLife");
+
+		var idText = lifeContainer.append("text")
+										.text(lifeGraphCells[c].id + ": ")
+										.attr("x", 5)
+			   							.attr("y", c * 20 + 25)
+			   							.attr("font-family", "sans-serif")
+   										.attr("font-size", textHeight);
+
+		var lifeLine = lifeContainer.append("line")
+						.attr("x1", function(){
+							return lifeLinearX(lifeGraphCells[c].begin) + 20 + margLife;
+						})
+						.attr("y1", function(){
+							return c * 20 + 20;
+						})
+						.attr("x2", function(){
+							return lifeLinearX(lifeGraphCells[c].end) +20 + margLife;
+						})
+						.attr("y2", function(){
+							return c * 20 + 20;
+						})
+						.attr("stroke-width", 1)
+						.attr("stroke", "black");
+
+		var lifeBegin = lifeContainer.append("line")
+						.attr("x1",function(){
+							return lifeLinearX(lifeGraphCells[c].begin) + 20 + margLife;
+						})
+						.attr("y1", function(){
+							return c * 20 + 15;
+						})
+						.attr("x2",function(){
+							return lifeLinearX(lifeGraphCells[c].begin) + 20 + margLife;
+						})
+						.attr("y2", function(){
+							return c * 20 + 25;
+						})
+						.attr("stroke-width", 1)
+						.attr("stroke", "black");
+
+		var lifeBeginText = lifeContainer.append("text")
+										.text(lifeGraphCells[c].begin)
+										.attr("x", lifeLinearX(lifeGraphCells[c].begin) - 5 + margLife)
+			   							.attr("y", c * 20 + 25)
+			   							.attr("font-family", "sans-serif")
+   										.attr("font-size", textHeight);
+
+		var lifeEnd = lifeContainer.append("line")
+						.attr("x1",function(){
+							return lifeLinearX(lifeGraphCells[c].end) +20 + margLife;
+						})
+						.attr("y1", function(){
+							return c * 20 + 15;
+						})
+						.attr("x2",function(){
+							return lifeLinearX(lifeGraphCells[c].end) +20 + margLife;
+						})
+						.attr("y2", function(){
+							return c * 20 + 25;
+						})
+						.attr("stroke-width", 1)
+						.attr("stroke", "black");	
+
+		var lifeEndText = lifeContainer.append("text")
+										.text(lifeGraphCells[c].end)
+										.attr("x", lifeLinearX(lifeGraphCells[c].end) + 25 + margLife)
+			   							.attr("y", c * 20 + 25)
+			   							.attr("font-family", "sans-serif")
+   										.attr("font-size", textHeight);	
+	}
+
+	var wholeLine = lifeContainer.append("line")
+							.attr("x1", function(){
+								return lifeLinearX(positionLine) + 20 + margLife;
+							})
+							.attr("y", function(){return 0;})
+							.attr("x2", function(){return lifeLinearX(positionLine) + 20 + margLife;})
+							.attr("y2", function(){return 1200;})
+							.attr("stroke-width", 1)
+							.attr("stroke", "purple");
+}
+
+//Function will save info about cell in certain time 
+//@param	cell 		cell we want to know info about
+//@param	position 	in what time we want to know what is happening
+function checkCell(cell, position){
+	//was cell born?
+	if(cell.begin == position){
+			begin++;
+	}
+
+	//Or was it its death or mitosis?
+	else if((cell.end == position) && (cell.end != maxTime)){
+		if(cell.children.length > 0){
+			mitosis++;
+		}
+		else{
+			death++;
+		}
+	}
+
+	//or was it alive?
+	else if(((position > cell.begin) && (position < cell.end)) || ((cell.end == position) && (cell.end == maxTime))){	
+		lifeGraphCells.push(cell);
+	}
+
+
+	//check what happend to its children
+	else{		
+		if((cell.children.length > 0) && (position > cell.end)){
+			var d = 0;
+			for(d; d<cell.children.length; d++){
+				checkCell(cell.children[d], position);
+			}
+		}
+	}
 }

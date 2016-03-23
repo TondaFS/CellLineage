@@ -26,7 +26,7 @@ circle.redC {
 }
 .buttons{
 	float:left;
-	width: 630px;
+	width: 650px;
 	margin-right: 10px;
 }
 .option{
@@ -48,15 +48,27 @@ circle.redC {
 .svgAxis{
 	position: fixed;
 	top: 35px;
+	background-color: white;
 }
 
 .description{
-	float:left;	
+	float:left;
+	width:450px;
+	height: 900px;
+	left: 1040px;
+	top: 35px;
+	position: fixed;
 }
 .graphBox{
+
 	clear:both;
 	float:left;
-	width: 1000px;
+	width: 1020px;
+	height: 900px;
+	position: fixed;
+	top: 35px;
+	overflow-x: visible;	
+	overflow-y: scroll;
 }
 
 .hide{
@@ -68,23 +80,22 @@ circle.redC {
 }
 
 .cellInfo{
-	position: fixed;
-	top: 30px;
-	width: 100%;
+	width: 450px;
 	height: 100px;
 }
 
 .interestingInfo{	
-	position: fixed;
-	top: 135px;	
-	width: 100%;
+	top: 100px;	
+	width: 450px;
 	height: 110px;
 }
 
 .lifeGraph{
-	position: fixed;
-	top: 245px;
-	width: 400px;
+	top: 220px;
+	width: 450px;
+	height: 690px;
+	overflow-y: scroll;
+
 }
 
 .bar {
