@@ -533,7 +533,6 @@ function displayBlock(){
 }
 
 //Funkce, ktera vykresli hlavni osu X
-//@param	xTime	celkova doba (tzn. jak siroka ma osa byt)
 function displayXAxis(){
 
 	//Scale pro osu
@@ -552,7 +551,7 @@ function displayXAxis(){
 									.attr("height", 30)
 									.attr("class", "svgAxis")
 									.on("click", function(){
-										line(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)), svgAxis);
+										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)), svgAxis);
 	});
 
 	//variables for axis
@@ -580,7 +579,7 @@ function displayXAxis(){
 //Function, which will change the position of the line in axis graph
 //@param 	position 	new position in the graph
 //@param 	svgAxis		axisGraph where the line is 
-function line(position, svgAxis){
+function lineX(position, svgAxis){
 	positionLine = position;
 
 	//is position out of axis?
@@ -668,14 +667,105 @@ function connectParentChildHorizontal(positionY, cell, container, repairer){
    VERTICAL DISPLAY
 ***************************************************************/
 
+//Function will count the width of GraphBoxSVG
+//@return	result		counted width
+function widthOfGraphBoxSVG(){
+	var i = 0;
+	var result = 0;
+
+	//adding width of every graph to the result
+	for(i; i < cells.length; i++){
+		var tmpDepth = depthFinder(cells[i]);
+		result += Math.pow(2,  tmpDepth) * scaler - 2*(margin*(tmpDepth-1));
+	}
+	return result;
+}
+
+//Function will display Y axis of Vertical graph
+function displayYAxis(){
+
+	//Scale pro osu
+	var yScale = d3.scale.linear()
+						.domain([0, maxTime])
+						.range([0, graphBoxHeightVertical - marginX]);
+
+	//Scale pro linku
+	var lineScaler = d3.scale.linear()
+							.domain([0, graphBoxHeightVertical - marginX])
+							.range([0, maxTime]);
+
+	//Vytvoreni svg osy
+	var svgYAxis = d3.select("body").select(".graphBox").append("svg")
+									.attr("width", 30)
+									.attr("height", graphBoxHeightVertical)
+									.attr("class", "svgYAxis")
+									.on("click", function(){
+										lineY(Math.round(lineScaler(d3.mouse(this)[1] - marginX/2 + 2)), svgYAxis);
+	});
+
+	//variables for axis
+	var yAxis = d3.svg.axis()
+					.scale(yScale)
+					.orient("left")
+					.ticks(30);
+
+	svgYAxis.append("g")
+			.attr("class", "axis")
+			.attr("transform", "translate("+ 20 + "," + marginX/2 + ")")
+			.call(yAxis);
+
+	//Attach line of position in the axisGraph
+	svgYAxis.append("line")
+			.attr("x1", 5)	
+			.attr("y1", linearScaleY(0) + marginX/2)
+			.attr("x2", 50)
+			.attr("y2", linearScaleY(0) + marginX/2)
+			.attr("stroke-width", 1)
+			.attr("stroke", "brown")
+			.attr("id", "movingLine");
+}
+
+//Function, which will change the position of the line in axis graph
+//@param 	position 	new position in the graph
+//@param 	svgAxis		axisGraph where the line is 
+function lineY(position, svgAxis){
+	positionLine = position;
+
+	//is position out of axis?
+	if(position > maxTime){
+		position = maxTime;
+	}
+	else if((position) < 0){
+		position = 0;
+	}
+	
+	//change position of the line
+	svgAxis.select("#movingLine")
+		.attr("y1", linearScaleY(position) + marginX/2)
+		.attr("y2", linearScaleY(position) + marginX/2);
+
+	getAdditionalData(position);
+}
+
 function displayVertical(){	
 	d3.selectAll("svg").remove();
 	
 	var m = 0;
 
+	
 	linearScaleY = d3.scale.linear()							//scaler for vertical display
 						 .domain([0, maxTime])
 						 .range([0, graphBoxHeightVertical - marginX]);	
+
+	displayYAxis();
+
+	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
+										.attr("width", widthOfGraphBoxSVG() + 30)
+										.attr("height", graphBoxHeightVertical)
+										.attr("class", "graphBoxSVG");
+
+	var positionInGraphBoxSVG = 30;
+	
 
 	for(m; m < cells.length; m++){	
 		destroySVG = true;
@@ -685,15 +775,20 @@ function displayVertical(){
 		var w = Math.pow(2,  depth) * scaler - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu					
 
 		//Vytvoreni SVG containeru
-		var svgContainer = d3.select("body").select(".graphBox").append("svg")
-											.attr("width", w - margin*(depth-1))
-											.attr("height", graphBoxHeightVertical);
+		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g");
 
-		displayPopulationV(cells[m], (w - margin*(depth-1))/2 , svgContainer, (w - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli
+		svgContainer.append("svg").attr("width", w - margin*(depth-1))
+								 .attr("height", graphBoxHeightVertical);
+
+		displayPopulationV(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli
 		
+
 		if(destroySVG){
 			svgContainer.remove();
+		} else{
+			positionInGraphBoxSVG += (w - margin*(depth-1)); 			
 		}
+
 		getAdditionalData(positionLine);
 	}
 }
@@ -809,7 +904,7 @@ function displayPopulationV(cell, positionX, container, repairer){
 		}
 
 	} else{	
-		if(cell.begin >= showFrom && cell.begin <= showTo){
+		if((cell.begin >= showFrom && cell.begin <= showTo) && cell.end != maxTime){
    			//vykresleni smrti bunky	
 			var redCircle = superCell.append("circle")
 							.on("mouseover", function() {

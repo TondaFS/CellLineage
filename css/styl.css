@@ -51,6 +51,12 @@ circle.redC {
 	background-color: white;
 }
 
+.svgYAxis{
+	position: fixed;
+	background-color: white;
+	top: 35px;	
+}
+
 .description{
 	float:left;
 	width:450px;
@@ -64,10 +70,10 @@ circle.redC {
 	clear:both;
 	float:left;
 	width: 1020px;
-	height: 900px;
+	height: 920px;
 	position: fixed;
 	top: 35px;
-	overflow-x: visible;	
+	overflow-x: scroll;	
 	overflow-y: scroll;
 }
 
@@ -107,4 +113,9 @@ circle.redC {
 	position:fixed;
 	width: 1px;
 	height: 1000px;
+}
+
+.graphBoxSVG{
+	float:left;
+
 }
