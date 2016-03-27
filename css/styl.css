@@ -5,8 +5,20 @@
 	shape-rendering: crispEdges;
 }
 .axis text{
-	font-family: : sans-serif;
+	font-family: sans-serif;
 	font-size: 12px;
+}
+
+.idNumber{
+	font-family: sans-serif;
+	font-weight: bold;	
+	
+}
+
+.timeDisplayText{
+	font-family: sans-serif;
+	font-weight: bold;	
+	fill: #984ea3;
 }
 
 line.hover {

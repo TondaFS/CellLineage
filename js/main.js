@@ -30,13 +30,21 @@ var everywhereAxis = false;				//Zobrazeni osy u kazdeho grafu
 var destroySVG = false;					
 var smallVisualisation = false;
 var showLifeLengthText = true;	
-var textHeight = "12px";				
+var showCellId = true;
+var textHeight = ["12px", "14px", "16px", "18px", "20px"];				
 var margLife = 60;						//Okraj pro LifeGraph
+var activeFontId = 1;
+var activeFontLife = 1;
+var activeFontText = 1;
 
 var linearScaleX;						//Linear scale for X axis
 var linearScaleY;						//Linear scale for y axis
 var graphBoxWidth = 1000;				//Sirka grafu s rodokmeny
 var graphBoxHeightVertical = 900;		//Height of graph box for vertical display
+
+
+var description = ["ORIGIN", "DEATH", "MITOSIS", "ALIVE"];
+var colors = ["#377eb8", "#e41a1c", "#4daf4a", "#984ea3"];
 
 
 
@@ -162,6 +170,36 @@ function findParent(parentID, cell, celles){
 /**************************************************************
    BUTTONS
 ***************************************************************/	
+function changeFontId(){
+	if(activeFontId < 4){
+		activeFontId += 1;		
+	} else{
+		activeFontId = 0;		
+	}
+	display();
+}
+
+function changeFontLife(){
+	if(activeFontLife < 4){
+		activeFontLife += 1;		
+	} else{
+		activeFontLife = 0;		
+	}
+	display();
+}
+
+function changeFontText(){
+	if(activeFontText < 2){
+		activeFontText += 1;		
+	} else{
+		activeFontText = 0;		
+	}
+}
+
+function showId(){
+	showCellId = !showCellId;
+	display();
+}
 
 function vertical(){
 	showFrom = 0;
@@ -189,7 +227,6 @@ function changeScales(){
 		scaler = 10;
 		polomer = 2;
 		stroke = 1;
-		showLifeLengthText = false;
 		
 		margin = 10;
 	}
@@ -197,7 +234,6 @@ function changeScales(){
 		scaler = 50;
 		polomer = 7;
 		stroke = 3;
-		showLifeLengthText = true;
 		
 		margin = 50;
 	}
@@ -400,8 +436,8 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
     						})
     						.on("click", function(){								//Po kliknuti se zobrazi info o bunce
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", "10px")
-    													.html("Cell : " + cell.id + "<br/>Lifetime: " + (cell.end - cell.begin))
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Cell : <b>" + cell.id + "</b><br/>Lenght of life: <b>" + (cell.end - cell.begin)+"</b>")
     						})
 							.attr("x1", linearScaleX(cell.begin) + marginX/2)
 							.attr("y1", positionY)
@@ -413,12 +449,19 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
         //Vykresleni doby zivota
         if(showLifeLengthText && !smallVisualisation){
         	var timeDisplay = superCell.append("text")
-    							.text(cell.end - cell.begin)
-    							.attr("x", linearScaleX((cell.end - cell.begin)/2 + cell.begin))
-    							.attr("y", positionY - 10)
-    							.attr("font-family", "sans-serif")
-   								.attr("font-size", "12px")
-   								.attr("id", "life" + cell.id);  
+    							.text(function(){
+    								var result = cell.end - cell.begin;
+    								if(result < 5){
+    									return "";
+    								}
+    								else{
+    									return result;}
+    								})
+    							.attr("x", linearScaleX((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
+    							.attr("y", positionY + 15 + activeFontLife)
+   								.attr("font-size", textHeight[activeFontLife])
+   								.attr("id", "life" + cell.id)
+   								.attr("class", "timeDisplayText");  
    		}
 
    		//seznam potomku ve frme textu
@@ -434,23 +477,23 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
     								})
     								.on("click", function(){						//Po kliknuti zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", "12px")
-    													.html("Cell ID: " + cell.id + "<br/>Begin time: " + cell.begin + "<br/>Death / mitosis: " + cell.end + "<br/>Parent: " + cell.parentID + "<br/>Children: " + childrenText)
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Cell: <b>" + cell.id + "</b><br/>Time of Origin: <b>" + cell.begin + "</b><br/>Death or mitosis in time: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
     								})
 									.attr("cx", linearScaleX(cell.begin) + marginX/2)
 									.attr("cy", positionY)
 			   						.attr("r", polomer)
-			   						.attr("fill", "blue");
+			   						.attr("fill", "#377eb8");
 			   								
 		//vykresleni ID bunky u pocatecniho bodu
-		if(!smallVisualisation){			
+		if(!smallVisualisation && showCellId){			
 			var description = superCell.append("text")
 									.text(cell.id)
-			   						.attr("x", linearScaleX(cell.begin) + 2)
-			   						.attr("y", positionY+2)
-			   						.attr("font-family", "sans-serif")
-   									.attr("font-size", textHeight)
-   									.attr("fill", "red");
+			   						.attr("x", linearScaleX(cell.begin)+marginX-10)
+			   						.attr("y", positionY - 7)
+			   						.attr("class", "idNumber")
+			   						.attr("font-size", textHeight[activeFontId])
+			   						.attr("text-anchor", "middle");
    		}
  	}
    			
@@ -484,17 +527,13 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
     							})	
     							.on("click", function(){					//Po kliknuti se zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", "12px")
-    													.html("Mitotis of cell: " + cell.id + "<br/>Time: " + cell.end + "<br/>New cells: " + childrenText)
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Mitotis of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
     							})							
 								.attr("cx", linearScaleX(cell.end) + marginX/2)
 								.attr("cy", positionY)
 			   					.attr("r", polomer)
-			   					.attr("fill", "green")
-			   					.append("title")
-			   					.text(function(d){
-			   						return "MITOSIS"
-			   					});
+			   					.attr("fill", "#4daf4a");
 			}
 	  } else{	
    			if(cell.begin >= showFrom && cell.begin <= showTo){
@@ -509,17 +548,13 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
     					})
     					.on("click", function(){			//Po klinuti se zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", "12px")
-    													.html("Death: " + cell.id + "<br/>Time: " + cell.end)
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Death of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end+"</b>")
     					})
 						.attr("cx", linearScaleX(cell.end) + marginX/2)
 						.attr("cy", positionY)
 			   			.attr("r", polomer)
-			   			.attr("fill", "#993333")
-			   			.append("title")
-			   			.text(function(d){
-			   				return "DEATH"
-			   			});
+			   			.attr("fill", "#e41a1c");
 			   	}
 		}
    	} 
@@ -571,8 +606,8 @@ function displayXAxis(){
 			.attr("y1", 5)
 			.attr("x2", linearScaleX(0) + marginX/2)
 			.attr("y2", 1000)
-			.attr("stroke-width", 1)
-			.attr("stroke", "purple")
+			.attr("stroke-width", 2.5)
+			.attr("stroke", "#e41a1c")
 			.attr("id", "movingLine");
 }
 
@@ -646,13 +681,13 @@ function getChildrenText(parent){
 //@param	container 	svg, do ktereho linku vlozit
 //@param	repairer	Y souradnice konce linky
 function connectParentChildHorizontal(positionY, cell, container, repairer){
-	var anotherLine = container.append("line")
+	var anotherLine = container.append("line")/*
 									.on("mouseover", function() {
         								d3.select(this).classed("hover", true);
       								})
     								.on("mouseout", function() {
          								d3.select(this).classed("hover", false);
-    								})
+    								})*/
 									.attr("x1", linearScaleX(cell.end) + marginX/2)
 									.attr("y1", positionY)
 									.attr("x2", linearScaleX(cell.end + 1) + marginX/2)
@@ -720,8 +755,8 @@ function displayYAxis(){
 			.attr("y1", linearScaleY(0) + marginX/2)
 			.attr("x2", 50)
 			.attr("y2", linearScaleY(0) + marginX/2)
-			.attr("stroke-width", 1)
-			.attr("stroke", "brown")
+			.attr("stroke-width", 2.5)
+			.attr("stroke", "#e41a1c")
 			.attr("id", "movingLine");
 }
 
@@ -809,6 +844,11 @@ function displayPopulationV(cell, positionX, container, repairer){
     						.on("mouseout", function() {
          						d3.select(this).classed("hover", false);
     						})
+    						.on("click", function(){								//Po kliknuti se zobrazi info o bunce
+    									d3.select("body").select(".cellInfo").selectAll("text").remove();
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Cell: <b>" + cell.id + "</b><br/>Lenght of life: <b>" + (cell.end - cell.begin)+"</b>")
+    						})
 							.attr("x1", positionX)
 							.attr("y1", linearScaleY(cell.begin) + marginX/2)
 							.attr("x2", positionX)
@@ -818,12 +858,20 @@ function displayPopulationV(cell, positionX, container, repairer){
 
         if(showLifeLengthText && !smallVisualisation){
         	var timeDisplay = superCell.append("text")
-        						.text(cell.end - cell.begin)
-    							.attr("x", positionX + 5)
-    							.attr("y", linearScaleY((cell.end - cell.begin)/2 + cell.begin))
+        						.text(function(){
+    								var result = cell.end - cell.begin;
+    								if(result < 5){
+    									return "";
+    								}
+    								else{
+    									return result;}
+    								})
+    							.attr("x", positionX - 18 - activeFontLife)
+    							.attr("y", linearScaleY((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
     							.attr("font-family", "sans-serif")
-   								.attr("font-size", "12px")
-   								.attr("id", "life" + cell.id);  
+   								.attr("font-size", textHeight[activeFontLife])
+   								.attr("id", "life" + cell.id)
+   								.attr("class", "timeDisplayText");  
    		}
 
    		//seznam potomku ve frme textu
@@ -839,23 +887,23 @@ function displayPopulationV(cell, positionX, container, repairer){
     								})
     								.on("click", function(){						//Po kliknuti zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", "12px")
-    													.html("Cell ID: " + cell.id + "<br/>Begin time: " + cell.begin + "<br/>Death / mitosis: " + cell.end + "<br/>Parent: " + cell.parentID + "<br/>Children: " + childrenText)
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Cell: <b>" + cell.id + "</b><br/>Time of Origin: <b>" + cell.begin + "</b><br/>Death or Mitosis in Time: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
     								})
 									.attr("cx", positionX)
 									.attr("cy", linearScaleY(cell.begin)+ marginX/2)
 			   						.attr("r", polomer)
-			   						.attr("fill", "blue");
+			   						.attr("fill", "#377eb8");
 
-		if(!smallVisualisation){
+		if(!smallVisualisation && showCellId){
 		//vykresleni ID bunky u pocatecniho bodu
 			var description = superCell.append("text")
 									.text(cell.id)
-			   						.attr("x", positionX)
-			   						.attr("y", linearScaleY(cell.begin + 2) )
+			   						.attr("x", positionX + 5)
+			   						.attr("y", linearScaleY(cell.begin) + marginX - 10)
 			   						.attr("font-family", "sans-serif")
-   									.attr("font-size", "10px")
-   									.attr("fill", "red");
+   									.attr("font-size", textHeight[activeFontId])
+   									.attr("class", "idNumber");
    		}
 	}
 
@@ -889,17 +937,13 @@ function displayPopulationV(cell, positionX, container, repairer){
     								})	
     								.on("click", function(){					//Po kliknuti se zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", "12px")
-    													.html("Mitotis of cell: " + cell.id + "<br/>Time: " + cell.end + "<br/>New cells: " + childrenText)
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Mitosis of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
     								})								
 									.attr("cx", positionX)
 									.attr("cy", linearScaleY(cell.end) + marginX/2)
 			   						.attr("r", polomer)
-			   						.attr("fill", "green")
-			   						.append("title")
-			   						.text(function(d){
-			   							return "MITOTICKE DELENI"
-			   						});
+			   						.attr("fill", "#4daf4a");
 
 		}
 
@@ -915,17 +959,13 @@ function displayPopulationV(cell, positionX, container, repairer){
     						})
     						.on("click", function(){			//Po klinuti se zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", "12px")
-    													.html("Death: " + cell.id + "<br/>Time: " + cell.end)
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Death of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end+"</b>")
     						})
 							.attr("cx", positionX)
 							.attr("cy", linearScaleY(cell.end) + marginX/2)
 			   				.attr("r", polomer)
-			   				.attr("fill", "#993333")
-			   				.append("title")
-			   				.text(function(d){
-			   					return "UMRTI"
-			   				});
+			   				.attr("fill", "#e41a1c");
 		}
 
 
@@ -938,13 +978,13 @@ function displayPopulationV(cell, positionX, container, repairer){
 //@param	container 	svg, do ktereho linku vlozit
 //@param	repairer	Y souradnice konce linky
 function connectParentChildVertical(positionX, cell, container, repairer){
-	var anotherLine = container.append("line")
+	var anotherLine = container.append("line")/*
 									.on("mouseover", function() {
         								d3.select(this).classed("hover", true);
       								})
     								.on("mouseout", function() {
          								d3.select(this).classed("hover", false);
-    								})
+    								})*/
 									.attr("x1", positionX)
 									.attr("y1", linearScaleY(cell.end) + marginX/2)
 									.attr("x2", positionX + repairer)
@@ -975,8 +1015,6 @@ function getAdditionalData(position){
 	}	
 
 	var dataStates = [begin, death, mitosis, lifeGraphCells.length];		//info about possible states
-	var description = ["BIRTH", "DEATH", "MITOSIS", "ALIVE"];
-	var colors = ["blue", "red", "green", "black"];
 
 	d3.selectAll(".stats").remove();
 
@@ -1043,7 +1081,7 @@ function displayLifeGraph(){
 										.attr("x", 5)
 			   							.attr("y", c * 20 + 25)
 			   							.attr("font-family", "sans-serif")
-   										.attr("font-size", textHeight);
+   										.attr("font-size", textHeight[activeFontText]);
 
 		var lifeLine = lifeContainer.append("line")
 						.attr("x1", function(){
@@ -1082,7 +1120,7 @@ function displayLifeGraph(){
 										.attr("x", lifeLinearX(lifeGraphCells[c].begin) - 5 + margLife)
 			   							.attr("y", c * 20 + 25)
 			   							.attr("font-family", "sans-serif")
-   										.attr("font-size", textHeight);
+   										.attr("font-size", textHeight[activeFontText]);
 
 		var lifeEnd = lifeContainer.append("line")
 						.attr("x1",function(){
@@ -1105,7 +1143,7 @@ function displayLifeGraph(){
 										.attr("x", lifeLinearX(lifeGraphCells[c].end) + 25 + margLife)
 			   							.attr("y", c * 20 + 25)
 			   							.attr("font-family", "sans-serif")
-   										.attr("font-size", textHeight);	
+   										.attr("font-size", textHeight[activeFontText]);	
 	}
 
 	var wholeLine = lifeContainer.append("line")
@@ -1116,7 +1154,7 @@ function displayLifeGraph(){
 							.attr("x2", function(){return lifeLinearX(positionLine) + 20 + margLife;})
 							.attr("y2", function(){return 1200;})
 							.attr("stroke-width", 1)
-							.attr("stroke", "purple");
+							.attr("stroke", "#e41a1c");
 }
 
 //Function will save info about cell in certain time 
