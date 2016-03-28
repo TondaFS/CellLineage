@@ -6,6 +6,8 @@
 		<script src="js/d3.js"></script>
 		<script src="js/d3.slider.js"></script>
 		<script src="js/math.min.js"></script>
+                <script src="js/jspdf.min.js"></script>
+                <script src="js/FileSaver.js"></script>
 		<link rel="stylesheet" href="css/styl.css" />		
 		<link rel="stylesheet" href="css/d3.slider.css" />			
 	</head>
@@ -27,7 +29,7 @@
 
         		<input name="lifeText"
         			type="button"
-        			value="LifeText"
+        			value="Life"
         			onclick="lifeText()" />
 
                         <input name="idShow"
@@ -55,9 +57,14 @@
         			value="Scale"
         			onclick="changeScales()" />
 
+                        <input name="pdf"
+                                type="button"
+                                value="PDF"
+                                onclick="makePDF()" />
+
                         <input name="time"
                                 type="button"
-                                value="Sort Time"
+                                value="Time"
                                 onclick="sortByTime()" />
 
                         <input name="id"

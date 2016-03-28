@@ -196,6 +196,38 @@ function changeFontText(){
 	}
 }
 
+function makePDF(){
+	var doc = new jsPDF();
+	var newsvg = d3.select('#svgContainer1').attr("title", "test2")
+        .attr("version", 1.1)
+        .attr("xmlns", "http://www.w3.org/2000/svg")
+        .node().parentNode.innerHTML;	
+
+    console.log(newsvg);
+	/*var svgAsText = new XMLSerializer().serializeToString(newsvg);
+	doc.addSVG(svgAsText, 20, 20, doc.internal.pageSize.width);
+	doc.save('Test.pdf');*/
+	/*
+    var test = $.get('svgContainer1', function(svgText){
+        var svgAsText = new XMLSerializer().serializeToString(svgText.documentElement);
+        doc.addSVG(svgAsText, 20, 20, doc.internal.pageSize.width - 20*2)
+
+        // Save the PDF
+        doc.save('TestSVG.pdf');
+    });*/
+
+
+    try {
+        var isFileSaverSupported = !!new Blob();
+    } catch (e) {
+        alert("blob not supported");
+    }       
+
+    var blob = new Blob([newsvg], {type: "image/svg+xml;base64"});
+    saveAs(blob, "myProfile.svg");
+
+}
+
 function showId(){
 	showCellId = !showCellId;
 	display();
@@ -349,8 +381,8 @@ function displayHorizontal(){
 						.range([0, graphBoxWidth - marginX]);
 	
 	//Vykresli pouze hlavni osu
-	if(!everywhereAxis || smallVisualisation){
-		displayXAxis();		
+	if(!everywhereAxis || smallVisualisation){	 
+		displayXAxis();	
 	}
 
 	//Vytvori prazdny SVG, aby se to vyrovnalo
@@ -361,14 +393,23 @@ function displayHorizontal(){
 		//nastvaveni, ze se ma smazat pro pripad, ze se nevykresli zadna bunka
 		destroySVG = true;
 
-		var depth = depthFinder(cells[m]);							
-		
-		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu	
+		var depth = depthFinder(cells[m]);		
+		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu			
 		
 		//Vytvoreni SVG containeru
 		var svgContainer = d3.select("body").select(".graphBox").append("svg")
 											.attr("width", graphBoxWidth)
-											.attr("height", h - margin*(depth-1));
+											.attr("height", h - margin*(depth-1))
+											.datum(cells[m])
+											.on("mouseover", function(d) {
+												if(smallVisualisation){
+													displayThisShit(d);
+												}
+											})
+											//.attr("class", "svgContainer" + cells[m].id)
+											.attr("id", "svgContainer"+cells[m].id)
+											.attr("version", 1.1)
+        									.attr("xmlns", "http://www.w3.org/2000/svg");
 
 		
 		displayHorizontalPopulation(cells[m], (h - margin*(depth-1))/2, svgContainer, (h - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli	
@@ -384,6 +425,11 @@ function displayHorizontal(){
 		}
 	}
 	getAdditionalData(positionLine);		
+}
+
+function displayThisShit(cell){
+	console.log("Displaying this Shit: " + cell.id);
+
 }
 
 //Funkce, ktera zjisti hloubku dane bunecne populace, pro spravne vetveni a zobrazeni v grafu
@@ -436,7 +482,7 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
     						})
     						.on("click", function(){								//Po kliknuti se zobrazi info o bunce
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    									d3.select("body").select(".cellInfo").append("text")//.attr("font-size", textHeight[activeFontText]) //- nefunguje
     													.html("Cell : <b>" + cell.id + "</b><br/>Lenght of life: <b>" + (cell.end - cell.begin)+"</b>")
     						})
 							.attr("x1", linearScaleX(cell.begin) + marginX/2)
@@ -731,7 +777,7 @@ function displayYAxis(){
 
 	//Vytvoreni svg osy
 	var svgYAxis = d3.select("body").select(".graphBox").append("svg")
-									.attr("width", 30)
+									.attr("width", 35)
 									.attr("height", graphBoxHeightVertical)
 									.attr("class", "svgYAxis")
 									.on("click", function(){
@@ -746,7 +792,7 @@ function displayYAxis(){
 
 	svgYAxis.append("g")
 			.attr("class", "axis")
-			.attr("transform", "translate("+ 20 + "," + marginX/2 + ")")
+			.attr("transform", "translate("+ 30 + "," + marginX/2 + ")")
 			.call(yAxis);
 
 	//Attach line of position in the axisGraph
@@ -795,11 +841,13 @@ function displayVertical(){
 	displayYAxis();
 
 	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
-										.attr("width", widthOfGraphBoxSVG() + 30)
+										.attr("width", widthOfGraphBoxSVG() + 35)
 										.attr("height", graphBoxHeightVertical)
-										.attr("class", "graphBoxSVG");
+										.attr("class", "graphBoxSVG")
+										.attr("version", 1.1)
+        								.attr("xmlns", "http://www.w3.org/2000/svg");
 
-	var positionInGraphBoxSVG = 30;
+	var positionInGraphBoxSVG = 35;
 	
 
 	for(m; m < cells.length; m++){	
