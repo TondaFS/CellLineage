@@ -22,7 +22,7 @@ var death = 0;
 var posunuti = 10;		//Posunuti hodnot v life graphu vedle poctu ZIJE, SMRT, MITOSA...
 
 //nastaveni
-var isVertical = false;					//is vertical display choosed>
+var isVertical = false;					//is vertical display choosed?
 var changeMaxTime = false;				//should i change maxTime?
 var showFrom = 0;						
 var showTo = 0;							
@@ -43,8 +43,26 @@ var graphBoxWidth = 1000;				//Sirka grafu s rodokmeny
 var graphBoxHeightVertical = 900;		//Height of graph box for vertical display
 
 
-var description = ["ORIGIN", "DEATH", "MITOSIS", "ALIVE"];
-var colors = ["#377eb8", "#e41a1c", "#4daf4a", "#984ea3"];
+var description = ["BEGIN", "END", "MITOSIS", "ALIVE"];
+
+//colors				 BEGIN  	END 	   MITOSIS    ALIVE  	 LINE     
+var colors = 			["#377eb8", "#e41a1c", "#4daf4a", "#984ea3", "#000000"];
+var colorsHovering = 	["#87b1d4", "#ee7576", "#94cf92", "#c194c7", "#666666"];
+
+//preparing jquery
+$( document ).ready(function() {
+    console.log( "ready!" );
+});
+
+$("#idShow").click(function(){
+	console.log("Click");
+        $(".idOfCell").toggle(400);
+    });
+
+$("#lifeText").click(function(){
+        $(".lengthOfLifeText").toggle(400);
+});
+
 
 
 
@@ -197,7 +215,6 @@ function changeFontText(){
 }
 
 function makePDF(){
-	var doc = new jsPDF();
 	var newsvg = d3.select('#svgContainer1').attr("title", "test2")
         .attr("version", 1.1)
         .attr("xmlns", "http://www.w3.org/2000/svg")
@@ -227,12 +244,12 @@ function makePDF(){
     saveAs(blob, "myProfile.svg");
 
 }
-
+/*
 function showId(){
 	showCellId = !showCellId;
 	display();
 }
-
+*/
 function vertical(){
 	showFrom = 0;
 	showTo = maxTime;
@@ -365,6 +382,211 @@ function sliderManager(){
 }
 
 
+/**************************************************************
+   DDISPLAYING ELEMENTS
+***************************************************************/
+
+//Function will display the line of life between the Begin and End circle
+//@param 	cell 			actual displaying cell
+//@param	cellContainer	svg container of the cell
+//@param	positionInGraph where to place the line in graph
+function displayBeginToEndLine(cell, cellContainer, positionInGraph){
+		var beginToEndLine = cellContainer.append("line")
+										  .classed("beginToEndLine", true)
+										  .on("mouseover", function() {							//Change color on hovering			
+        										d3.select(this).attr("stroke", colorsHovering[4]);
+      				  					  })
+    				  					  .on("mouseout", function(){
+    											d3.select(this).attr("stroke", colors[4]);
+    				  					  })
+    				  					  .on("click", function(){								//On click show info about life of cell
+    											d3.select("body").select(".cellInfo").selectAll("text").remove();
+    											d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    				 							.html("Cell: <b>" + cell.id + "</b><br/>Lenght of life: <b>" + (cell.end - cell.begin)+"</b>")
+    				  					  })
+    				  					  .attr("stroke-width", stroke)
+                      					  .attr("stroke", colors[4]); ;
+
+		if(isVertical){
+			beginToEndLine.attr("x1", positionInGraph)
+						  .attr("y1", linearScaleY(cell.begin) + marginX/2)
+						  .attr("x2", positionInGraph)
+						  .attr("y2", linearScaleY(cell.end) + marginX/2)
+		} else{
+			beginToEndLine.attr("x1", linearScaleX(cell.begin) + marginX/2)
+						  .attr("y1", positionInGraph)
+						  .attr("x2", linearScaleX(cell.end) + marginX/2)
+						  .attr("y2", positionInGraph);
+		}
+}
+
+//Function will show the lenght of life
+//@param 	cell 			actual displaying cell
+//@param	cellContainer	svg container of the cell
+//@param	positionInGraph where to place the text in graph
+function displayLengthOfLife(cell, cellContainer, positionInGraph){
+		var timeDisplay = cellContainer.append("text").classed("lengthOfLifeText", true)		
+    								   .text(function(){
+    										var result = cell.end - cell.begin;
+    										if(result < 5 && maxTime > 20){
+    											return "";
+    										}
+    										else{
+    											return result;}
+    										})
+    								    .attr("font-size", textHeight[activeFontLife])
+   										.attr("id", "life" + cell.id)
+   										.attr("fill", colors[3]); 
+   		if(isVertical){
+   			timeDisplay.attr("x", positionInGraph - 18 - activeFontLife)
+    				   .attr("y", linearScaleY((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
+   		} else {
+   			timeDisplay.attr("x", linearScaleX((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
+    				   .attr("y", positionInGraph + 15 + activeFontLife); 
+   		}    							 
+}
+
+//Function will display the Begin circle
+//@param 	cell 			actual displaying cell
+//@param	cellContainer	svg container of the cell
+//@param	positionInGraph where to place the circle in graph
+function displayBegin(cell, cellContainer, positionInGraph){
+	var childrenText = getChildrenText(cell);		//list of cells in text
+	var beginCircle = cellContainer.append("circle").classed("BeginCircle", true)
+									.on("mouseover", function() {					//change of color on hovering
+        									d3.select(this).attr("fill", colorsHovering[0]);
+      								})
+    								.on("mouseout", function() {
+         									d3.select(this).attr("fill", colors[0]);
+    								})
+    								.on("click", function(){						
+    									d3.select("body").select(".cellInfo").selectAll("text").remove();
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Cell: <b>" + cell.id + "</b><br/>Time of Origin: <b>" + cell.begin + "</b><br/>Death or mitosis in time: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
+    								})
+    								.attr("r", polomer)
+			   						.attr("fill", colors[0]);
+
+	if(isVertical){
+		beginCircle.attr("cx", positionInGraph)
+				   .attr("cy", linearScaleY(cell.begin)+ marginX/2);
+
+	} else{
+		beginCircle.attr("cx", linearScaleX(cell.begin) + marginX/2)
+				   .attr("cy", positionInGraph);
+	}	
+}
+
+//Function will display the Id of cell
+//@param 	cell 			actual displaying cell
+//@param	cellContainer	svg container of the cell
+//@param	positionInGraph where to place the id
+function displayIdOfCell(cell, cellContainer, positionInGraph){
+	var idOfCell = cellContainer.append("text")
+								.attr("class", "idOfCell")
+								.text(cell.id)			   						
+			   					.attr("font-size", textHeight[activeFontId])
+			   					.attr("text-anchor", "right");
+
+	if(isVertical){
+		idOfCell.attr("x", positionInGraph + 10)
+			   	.attr("y", linearScaleY(cell.begin) + marginX - 10);
+	} else{
+		idOfCell.attr("x", linearScaleX(cell.begin) + marginX - 10)
+			   	.attr("y", positionInGraph - 7);
+	}
+}
+
+//Function will display the mitosis circle 
+//@param 	cell 			actual displaying cell
+//@param	cellContainer	svg container of the cell
+//@param	positionInGraph where to place the circle
+function displayMitosis(cell, cellContainer, positionInGraph){
+	var childrenText = getChildrenText(cell);
+	var mitosisCircle = cellContainer.append("circle")
+								 	 .attr("class", "MitosisCircle")
+								 	 .on("mouseover", function() {				//Zmena barvy po najeti na prvek
+        								d3.select(this).attr("fill", colorsHovering[2])
+      							 	 })
+    							 	 .on("mouseout", function() {
+         								d3.select(this).attr("fill", colors[2]);
+    							 	 })	
+    							 	 .on("click", function(){					//Po kliknuti se zobrazi info
+    									d3.select("body").select(".cellInfo").selectAll("text").remove();
+    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    													.html("Mitotis of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
+    							 	 })	
+    							 	 .attr("r", polomer)
+			   					 	 .attr("fill", colors[2]);
+	
+	if(isVertical){
+		mitosisCircle.attr("cx", positionInGraph)
+					 .attr("cy", linearScaleY(cell.end) + marginX/2);
+
+	} else{
+		mitosisCircle.attr("cx", linearScaleX(cell.end) + marginX/2)
+					 .attr("cy", positionInGraph);
+	}					
+}
+
+//Function will display the End circle 
+//@param 	cell 			actual displaying cell
+//@param	cellContainer	svg container of the cell
+//@param	positionInGraph where to place the circle
+function displayEnd(cell, cellContainer, positionInGraph){
+	var childrenText = getChildrenText(cell);
+	var endCircle = cellContainer.append("circle")
+								 .attr("class", "EndCircle")
+								 .on("mouseover", function() {					//Zmena barvy po najeti na prvek
+        							d3.select(this).attr("fill", colorsHovering[1]);
+      							 })
+    							 .on("mouseout", function() {
+         							d3.select(this).attr("fill", colors[1]);
+    							 })
+    							 .on("click", function(){			//Po klinuti se zobrazi info
+    								d3.select("body").select(".cellInfo").selectAll("text").remove();
+    								d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
+    												 .html("Death of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end+"</b>")
+    							 })
+    							 .attr("r", polomer)
+			   					 .attr("fill", colors[1]);
+
+    if(isVertical){
+    	endCircle.attr("cx", positionInGraph)
+				 .attr("cy", linearScaleY(cell.end) + marginX/2);
+
+    } else{
+    	endCircle.attr("cx", linearScaleX(cell.end) + marginX/2)
+				 .attr("cy", positionInGraph);
+    }		   			
+}
+
+//Funkce, ktera vytvori linku spoje mezi bodem mitotickeho deleni a nove vyniklou bunkou
+//@param	positionInGraph 	pozice vykresleni
+//@param 	ancestor 	 		bunka, ze ktere vznikly nove bunky
+//@param	container 			svg, do ktereho linku vlozit
+//@param	repairer			Y souradnice konce linky
+//@param	child 				new cell
+function connectParentChild(positionInGraph, ancestor, container, repairer, child){
+	var ancestorLine = container.append("line")
+								.attr("class", "ancestorLine")
+								.attr("stroke-width", stroke)
+                        		.attr("stroke", colors[4]);
+
+    if(isVertical){
+    	ancestorLine.attr("x1", positionInGraph)
+					.attr("y1", linearScaleY(ancestor.end) + marginX/2)
+					.attr("x2", positionInGraph + repairer)
+					.attr("y2", linearScaleY(child.begin) + marginX/2);
+    } else{
+    	ancestorLine.attr("x1", linearScaleX(ancestor.end) + marginX/2)
+					.attr("y1", positionInGraph)
+					.attr("x2", linearScaleX(child.begin) + marginX/2)
+					.attr("y2", positionInGraph + repairer);
+    }								
+}
+
+
 
 /**************************************************************
    HORIZONTÁLNÍ VYKRESLENÍ
@@ -458,8 +680,8 @@ function depthFinder(cell){
 	}
 }
 
-// Funkce, ktera vykresli vsechny body a spoje jedne bunky - Horizontalne
 
+// Funkce, ktera vykresli vsechny body a spoje jedne bunky - Horizontalne
 //@param	cell 	 		bunka, kterou vykresluji
 //@param	positionY		pozice Y, kde vykreslim aktualni bunku
 //@param	container 		SVG container, kam vykresluji
@@ -471,82 +693,24 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
 	if((cell.begin >= showFrom) && (cell.begin <= showTo)){
 		destroySVG = false;
 		shown = true;
-		
-		//spoji start a end body			
-		var superLine = superCell.append("line")			
-							.on("mouseover", function() {							//Zmena barvy po najeti na prvek			
-        						d3.select(this).classed("hover", true);
-      						})
-    						.on("mouseout", function() {
-         						d3.select(this).classed("hover", false);
-    						})
-    						.on("click", function(){								//Po kliknuti se zobrazi info o bunce
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text")//.attr("font-size", textHeight[activeFontText]) //- nefunguje
-    													.html("Cell : <b>" + cell.id + "</b><br/>Lenght of life: <b>" + (cell.end - cell.begin)+"</b>")
-    						})
-							.attr("x1", linearScaleX(cell.begin) + marginX/2)
-							.attr("y1", positionY)
-							.attr("x2", linearScaleX(cell.end) + marginX/2)
-							.attr("y2", positionY)
-							.attr("stroke-width", stroke)
-                        	.attr("stroke", "black"); 
 
-        //Vykresleni doby zivota
+		displayBeginToEndLine(cell, superCell, positionY);
+        
         if(showLifeLengthText && !smallVisualisation){
-        	var timeDisplay = superCell.append("text")
-    							.text(function(){
-    								var result = cell.end - cell.begin;
-    								if(result < 5){
-    									return "";
-    								}
-    								else{
-    									return result;}
-    								})
-    							.attr("x", linearScaleX((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
-    							.attr("y", positionY + 15 + activeFontLife)
-   								.attr("font-size", textHeight[activeFontLife])
-   								.attr("id", "life" + cell.id)
-   								.attr("class", "timeDisplayText");  
-   		}
+        	displayLengthOfLife(cell, superCell, positionY);
+   		}   		
 
-   		//seznam potomku ve frme textu
-   		var childrenText = getChildrenText(cell);
-
-    	//vykresleni pocatecniho bodu
-		var blueCircle = superCell.append("circle")
-									.on("mouseover", function() {					//Zmena barvy po najeti na prvek
-        									d3.select(this).classed("blueC", true);
-      								})
-    								.on("mouseout", function() {
-         									d3.select(this).classed("blueC", false);
-    								})
-    								.on("click", function(){						//Po kliknuti zobrazi info
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Cell: <b>" + cell.id + "</b><br/>Time of Origin: <b>" + cell.begin + "</b><br/>Death or mitosis in time: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
-    								})
-									.attr("cx", linearScaleX(cell.begin) + marginX/2)
-									.attr("cy", positionY)
-			   						.attr("r", polomer)
-			   						.attr("fill", "#377eb8");
-			   								
-		//vykresleni ID bunky u pocatecniho bodu
-		if(!smallVisualisation && showCellId){			
-			var description = superCell.append("text")
-									.text(cell.id)
-			   						.attr("x", linearScaleX(cell.begin)+marginX-10)
-			   						.attr("y", positionY - 7)
-			   						.attr("class", "idNumber")
-			   						.attr("font-size", textHeight[activeFontId])
-			   						.attr("text-anchor", "middle");
+   		displayBegin(cell, superCell, positionY);			   								
+		
+		if(!smallVisualisation && showCellId){	
+			displayIdOfCell(cell, superCell, positionY);
    		}
  	}
    			
    	if(cell.children.length != 0){											//pokud ma bunka potomky, vykreslim je 				
 		if(shown){							//Pokud se vykreslila aktuani bunka, spojim	s potomky
 			if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){		
-				connectParentChildHorizontal(positionY, cell, superCell, -repairer);
+				connectParentChild(positionY, cell, superCell, -repairer, cell.children[0]);
 			}
 		}
 			
@@ -555,7 +719,7 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
 		} else{
 			if(shown){
 				if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
-					connectParentChildHorizontal(positionY, cell, superCell, repairer);
+					connectParentChild(positionY, cell, superCell, repairer, cell.children[1]);
 				}
 			}
 			displayHorizontalPopulation(cell.children[0], positionY - repairer, container, repairer/2);
@@ -563,44 +727,12 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
 		}
 
 		if(shown){
-			//vykresleni mitotickeho deleni
-			var greenCircle = superCell.append("circle")
-								.on("mouseover", function() {				//Zmena barvy po najeti na prvek
-        								d3.select(this).classed("greenC", true);
-      							})
-    							.on("mouseout", function() {
-         								d3.select(this).classed("greenC", false);
-    							})	
-    							.on("click", function(){					//Po kliknuti se zobrazi info
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Mitotis of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
-    							})							
-								.attr("cx", linearScaleX(cell.end) + marginX/2)
-								.attr("cy", positionY)
-			   					.attr("r", polomer)
-			   					.attr("fill", "#4daf4a");
-			}
+			displayMitosis(cell, superCell, positionY);
+		}
 	  } else{	
    			if(cell.begin >= showFrom && cell.begin <= showTo){
-   			//vykresleni smrti bunky
    				if(cell.end != maxTime){	
-					var redCircle = superCell.append("circle")
-						.on("mouseover", function() {					//Zmena barvy po najeti na prvek
-        						d3.select(this).classed("redC", true);
-      					})
-    					.on("mouseout", function() {
-         						d3.select(this).classed("redC", false);
-    					})
-    					.on("click", function(){			//Po klinuti se zobrazi info
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Death of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end+"</b>")
-    					})
-						.attr("cx", linearScaleX(cell.end) + marginX/2)
-						.attr("cy", positionY)
-			   			.attr("r", polomer)
-			   			.attr("fill", "#e41a1c");
+   						displayEnd(cell, superCell, positionY);
 			   	}
 		}
    	} 
@@ -647,7 +779,7 @@ function displayXAxis(){
 			.call(xAxis);
 
 	//Attach line of position in the axisGraph
-	svgAxis.append("line")
+	svgAxis.append("line")			
 			.attr("x1", linearScaleX(0) + marginX/2)	
 			.attr("y1", 5)
 			.attr("x2", linearScaleX(0) + marginX/2)
@@ -721,27 +853,6 @@ function getChildrenText(parent){
 	}
 }
 
-//Funkce, ktera vytvori linku spoje mezi bodem mitotickeho deleni a nove vyniklou bunkou
-//@param	positionY	pozice vykresleni na ose Y
-//@param 	cell 		bunka, ze ktere vznikly nove bunky
-//@param	container 	svg, do ktereho linku vlozit
-//@param	repairer	Y souradnice konce linky
-function connectParentChildHorizontal(positionY, cell, container, repairer){
-	var anotherLine = container.append("line")/*
-									.on("mouseover", function() {
-        								d3.select(this).classed("hover", true);
-      								})
-    								.on("mouseout", function() {
-         								d3.select(this).classed("hover", false);
-    								})*/
-									.attr("x1", linearScaleX(cell.end) + marginX/2)
-									.attr("y1", positionY)
-									.attr("x2", linearScaleX(cell.end + 1) + marginX/2)
-									.attr("y2", positionY + repairer)
-									.attr("stroke-width", stroke)
-                        			.attr("stroke", "black");
-}
-
 
 
 /**************************************************************
@@ -790,13 +901,14 @@ function displayYAxis(){
 					.orient("left")
 					.ticks(30);
 
-	svgYAxis.append("g")
+	svgYAxis.append("g").attr("render-order", "1")
 			.attr("class", "axis")
 			.attr("transform", "translate("+ 30 + "," + marginX/2 + ")")
 			.call(yAxis);
 
 	//Attach line of position in the axisGraph
 	svgYAxis.append("line")
+			.attr("render-order", "2")
 			.attr("x1", 5)	
 			.attr("y1", linearScaleY(0) + marginX/2)
 			.attr("x2", 50)
@@ -884,81 +996,25 @@ function displayPopulationV(cell, positionX, container, repairer){
 		destroySVG = false;
 		shown = true;
 
-		//spoji start a end body
-		var superLine = superCell.append("line")
-							.on("mouseover", function() {
-        						d3.select(this).classed("hover", true);
-      						})
-    						.on("mouseout", function() {
-         						d3.select(this).classed("hover", false);
-    						})
-    						.on("click", function(){								//Po kliknuti se zobrazi info o bunce
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Cell: <b>" + cell.id + "</b><br/>Lenght of life: <b>" + (cell.end - cell.begin)+"</b>")
-    						})
-							.attr("x1", positionX)
-							.attr("y1", linearScaleY(cell.begin) + marginX/2)
-							.attr("x2", positionX)
-							.attr("y2", linearScaleY(cell.end) + marginX/2)
-							.attr("stroke-width", stroke)
-                        	.attr("stroke", "black");
+		displayBeginToEndLine(cell, superCell, positionX);
 
         if(showLifeLengthText && !smallVisualisation){
-        	var timeDisplay = superCell.append("text")
-        						.text(function(){
-    								var result = cell.end - cell.begin;
-    								if(result < 5){
-    									return "";
-    								}
-    								else{
-    									return result;}
-    								})
-    							.attr("x", positionX - 18 - activeFontLife)
-    							.attr("y", linearScaleY((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
-    							.attr("font-family", "sans-serif")
-   								.attr("font-size", textHeight[activeFontLife])
-   								.attr("id", "life" + cell.id)
-   								.attr("class", "timeDisplayText");  
+        	displayLengthOfLife(cell, superCell, positionX);        	
    		}
 
-   		//seznam potomku ve frme textu
-   		var childrenText = getChildrenText(cell);
+   		displayBegin(cell, superCell, positionX);
 
-   		//vykresleni pocatecniho bodu
-		var blueCircle = superCell.append("circle")
-									.on("mouseover", function() {
-        									d3.select(this).classed("blueC", true);
-      								})
-    								.on("mouseout", function() {
-         									d3.select(this).classed("blueC", false);
-    								})
-    								.on("click", function(){						//Po kliknuti zobrazi info
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Cell: <b>" + cell.id + "</b><br/>Time of Origin: <b>" + cell.begin + "</b><br/>Death or Mitosis in Time: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
-    								})
-									.attr("cx", positionX)
-									.attr("cy", linearScaleY(cell.begin)+ marginX/2)
-			   						.attr("r", polomer)
-			   						.attr("fill", "#377eb8");
+   		
 
 		if(!smallVisualisation && showCellId){
-		//vykresleni ID bunky u pocatecniho bodu
-			var description = superCell.append("text")
-									.text(cell.id)
-			   						.attr("x", positionX + 5)
-			   						.attr("y", linearScaleY(cell.begin) + marginX - 10)
-			   						.attr("font-family", "sans-serif")
-   									.attr("font-size", textHeight[activeFontId])
-   									.attr("class", "idNumber");
+			displayIdOfCell(cell, superCell, positionX);
    		}
 	}
 
 	if(cell.children.length != 0){
 		if(shown){
 			if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
-				connectParentChildVertical(positionX, cell, superCell, -repairer);
+				connectParentChild(positionX, cell, superCell, -repairer, cell.children[0]);
 			}
 		}
 
@@ -967,7 +1023,7 @@ function displayPopulationV(cell, positionX, container, repairer){
 		} else{
 			if(shown){
 				if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
-					connectParentChildVertical(positionX, cell, superCell, repairer);
+					connectParentChild(positionX, cell, superCell, repairer, cell.children[1]);
 				}
 			}
 			displayPopulationV(cell.children[0], positionX - repairer, container, repairer/2);
@@ -975,70 +1031,14 @@ function displayPopulationV(cell, positionX, container, repairer){
 		}
 
 		if(shown){
-			//vykresleni mitotickeho deleni
-			var greenCircle = superCell.append("circle")
-									.on("mouseover", function() {
-        									d3.select(this).classed("greenC", true);
-      								})
-    								.on("mouseout", function() {
-         									d3.select(this).classed("greenC", false);
-    								})	
-    								.on("click", function(){					//Po kliknuti se zobrazi info
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Mitosis of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
-    								})								
-									.attr("cx", positionX)
-									.attr("cy", linearScaleY(cell.end) + marginX/2)
-			   						.attr("r", polomer)
-			   						.attr("fill", "#4daf4a");
-
+			displayMitosis(cell, superCell, positionX);
 		}
 
 	} else{	
 		if((cell.begin >= showFrom && cell.begin <= showTo) && cell.end != maxTime){
-   			//vykresleni smrti bunky	
-			var redCircle = superCell.append("circle")
-							.on("mouseover", function() {
-        							d3.select(this).classed("redC", true);
-      						})
-    						.on("mouseout", function() {
-         							d3.select(this).classed("redC", false);
-    						})
-    						.on("click", function(){			//Po klinuti se zobrazi info
-    									d3.select("body").select(".cellInfo").selectAll("text").remove();
-    									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Death of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end+"</b>")
-    						})
-							.attr("cx", positionX)
-							.attr("cy", linearScaleY(cell.end) + marginX/2)
-			   				.attr("r", polomer)
-			   				.attr("fill", "#e41a1c");
+			displayEnd(cell, superCell, positionX);
 		}
-
-
 	}
-}
-
-//Funkce, ktera vytvori linku spoje mezi bodem mitotickeho deleni a nove vyniklou bunkou
-//@param	positionY	pozice vykresleni na ose Y
-//@param 	cell 		bunka, ze ktere vznikly nove bunky
-//@param	container 	svg, do ktereho linku vlozit
-//@param	repairer	Y souradnice konce linky
-function connectParentChildVertical(positionX, cell, container, repairer){
-	var anotherLine = container.append("line")/*
-									.on("mouseover", function() {
-        								d3.select(this).classed("hover", true);
-      								})
-    								.on("mouseout", function() {
-         								d3.select(this).classed("hover", false);
-    								})*/
-									.attr("x1", positionX)
-									.attr("y1", linearScaleY(cell.end) + marginX/2)
-									.attr("x2", positionX + repairer)
-									.attr("y2", linearScaleY(cell.end + 1) + marginX/2)
-									.attr("stroke-width", stroke)
-                        			.attr("stroke", "black");
 }
 
 /**************************************************************

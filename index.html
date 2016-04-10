@@ -5,9 +5,8 @@
 		<title>Cell visualisation</title>
 		<script src="js/d3.js"></script>
 		<script src="js/d3.slider.js"></script>
-		<script src="js/math.min.js"></script>
-                <script src="js/jspdf.min.js"></script>
-                <script src="js/FileSaver.js"></script>
+		<script src="js/math.min.js"></script> 
+                <script src="js/jquery-1.12.2.min.js"></script>                 
 		<link rel="stylesheet" href="css/styl.css" />		
 		<link rel="stylesheet" href="css/d3.slider.css" />			
 	</head>
@@ -27,15 +26,12 @@
         			value="Vertical" 
         			onclick="vertical()" />
 
-        		<input name="lifeText"
-        			type="button"
-        			value="Life"
-        			onclick="lifeText()" />
+        		
 
-                        <input name="idShow"
-                                type="button"
-                                value="ID"
-                                onclick="showId()" />
+                        <button id="lifeText">Life</button>
+
+                        <button id="idShow">ID</button>
+                        
 
         		<input name="changeFontId"
         			type="button"
@@ -83,7 +79,7 @@
         		value="Change"
         		onclick="change()" /> 
 
-                <input type="file" id="file-input" />
+                <input type="file" id="file-input"/>
                 <pre id="file-content"></pre>
                 </div>              		
 

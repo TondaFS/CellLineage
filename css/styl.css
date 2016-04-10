@@ -9,33 +9,20 @@
 	font-size: 12px;
 }
 
-.idNumber{
+.idOfCell{
 	font-family: sans-serif;
-	font-weight: bold;	
-	
+	font-weight: bold;		
 }
 
-.timeDisplayText{
+.lengthOfLifeText{
 	font-family: sans-serif;
 	font-weight: bold;	
-	fill: #984ea3;
 }
 
 line.hover {
 	stroke: #C0C0C0;
 }
 
-circle.blueC {
-	fill: #0099FF;
-}
-
-circle.greenC {
-	fill: #00CC33;
-}
-
-circle.redC {
-	fill: #FF0000 ;
-}
 .buttons{
 	float:left;
 	width: 650px;
@@ -60,13 +47,14 @@ circle.redC {
 .svgAxis{
 	position: fixed;
 	top: 35px;
-	background-color: white;
+	left: 0px;
 }
 
 .svgYAxis{
 	position: fixed;
 	background-color: white;
 	top: 35px;
+	left: 0px;
 }
 
 .description{
@@ -129,5 +117,4 @@ circle.redC {
 
 .graphBoxSVG{
 	float:left;
-
 }
