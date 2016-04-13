@@ -25,7 +25,7 @@ line.hover {
 
 .buttons{
 	float:left;
-	width: 650px;
+	width: 750px;
 	margin-right: 10px;
 }
 .option{
@@ -47,7 +47,7 @@ line.hover {
 .svgAxis{
 	position: fixed;
 	top: 35px;
-	left: 0px;
+	/*left: 0px;*/
 }
 
 .svgYAxis{

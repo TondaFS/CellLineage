@@ -66,6 +66,8 @@ $("#lifeText").click(function(){
 
 
 
+
+
 /**************************************************************
 	LOAD DATA
 ***************************************************************/
@@ -346,9 +348,12 @@ function lifeText(){
 	display();
 }
 
+
+
+
+
 //Funkce, ktera vytvori Slider
 function sliderManager(){
-
 	//Vymaze predchozi slider, pokud tam je
 	d3.select('#handle-one').remove();
 	d3.select('#handle-two').remove();
@@ -379,6 +384,9 @@ function sliderManager(){
 								}
 							})
 						}));
+
+	d3.select('#textMin').text(showFrom);	
+	d3.select('#textMax').text(showTo);
 }
 
 
@@ -462,7 +470,7 @@ function displayBegin(cell, cellContainer, positionInGraph){
     								.on("click", function(){						
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
     									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Cell: <b>" + cell.id + "</b><br/>Time of Origin: <b>" + cell.begin + "</b><br/>Death or mitosis in time: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
+    													.html("Cell: <b>" + cell.id + "</b><br/>Begin Frame: <b>" + cell.begin + "</b><br/>End or mitosis in Frame: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
     								})
     								.attr("r", polomer)
 			   						.attr("fill", colors[0]);
@@ -514,7 +522,7 @@ function displayMitosis(cell, cellContainer, positionInGraph){
     							 	 .on("click", function(){					//Po kliknuti se zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
     									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    													.html("Mitotis of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
+    													.html("Mitotis of Cell: <b>" + cell.id + "</b><br/>In Frame: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
     							 	 })	
     							 	 .attr("r", polomer)
 			   					 	 .attr("fill", colors[2]);
@@ -546,7 +554,7 @@ function displayEnd(cell, cellContainer, positionInGraph){
     							 .on("click", function(){			//Po klinuti se zobrazi info
     								d3.select("body").select(".cellInfo").selectAll("text").remove();
     								d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    												 .html("Death of Cell: <b>" + cell.id + "</b><br/>In Time: <b>" + cell.end+"</b>")
+    												 .html("End of Cell: <b>" + cell.id + "</b><br/>In Frame: <b>" + cell.end+"</b>")
     							 })
     							 .attr("r", polomer)
 			   					 .attr("fill", colors[1]);
@@ -783,7 +791,7 @@ function displayXAxis(){
 			.attr("x1", linearScaleX(0) + marginX/2)	
 			.attr("y1", 5)
 			.attr("x2", linearScaleX(0) + marginX/2)
-			.attr("y2", 1000)
+			.attr("y2", graphBoxHeightVertical)
 			.attr("stroke-width", 2.5)
 			.attr("stroke", "#e41a1c")
 			.attr("id", "movingLine");
@@ -846,7 +854,7 @@ function getChildrenText(parent){
 	if(parent.children.length == 1){
 		return "" + parent.children[0].id;
 	}else if(parent.children.length == 2){
-		return "" + parent.children[0].id + " a " + parent.children[1].id;
+		return "" + parent.children[0].id + " and " + parent.children[1].id;
 	}
 	else{
 		return "None";
@@ -911,7 +919,7 @@ function displayYAxis(){
 			.attr("render-order", "2")
 			.attr("x1", 5)	
 			.attr("y1", linearScaleY(0) + marginX/2)
-			.attr("x2", 50)
+			.attr("x2", graphBoxWidth)
 			.attr("y2", linearScaleY(0) + marginX/2)
 			.attr("stroke-width", 2.5)
 			.attr("stroke", "#e41a1c")
