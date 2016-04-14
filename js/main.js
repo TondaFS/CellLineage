@@ -51,39 +51,36 @@ var colorsHovering = 	["#87b1d4", "#ee7576", "#94cf92", "#c194c7", "#666666"];
 
 //preparing jquery
 $( document ).ready(function() {
-    console.log( "ready!" );
+    console.log( "jquery ready!" );
 });
-
-$("#idShow").click(function(){
-	console.log("Click");
-        $(".idOfCell").toggle(400);
-    });
-
-$("#lifeText").click(function(){
-        $(".lengthOfLifeText").toggle(400);
-});
-
-
-
 
 
 
 /**************************************************************
 	LOAD DATA
 ***************************************************************/
+//Reakce na nahrani souboru 
+document.getElementById('file-input')
+  .addEventListener('change', readSingleFile, false);
+
 //Load data from input
 function readSingleFile(e) {
   	var file = e.target.files[0];
+  	var fileName = file.name;
   	if (!file) {
     	return;
   	}
 
+  	if(checkFileName(fileName) != 0){
+  		throw new Error("Not supported format - file is not .txt!");
+  		return;
+  	}
+
   	var reader = new FileReader();
   	reader.onload = function(e) {  
-  		var contents = e.target.result; 
-
-  		changeMaxTime = true; 		
+  		var contents = e.target.result;  				
   		parseData(contents);
+  		changeMaxTime = true; 
   		horizontal();
   		sliderManager();
 	};
@@ -91,9 +88,13 @@ function readSingleFile(e) {
   reader.readAsText(file);
 }
 
-//Reakce na nahrani souboru 
-document.getElementById('file-input')
-  .addEventListener('change', readSingleFile, false);
+function checkFileName(name){
+	var length = name.length;
+	var i = length - 4;
+	var str1 = name.substring(i, length);
+	var str2 = ".txt";
+	return str1.localeCompare(str2);
+}
 
 //Funkce, ktera ze vstupniho textoveho retezce (souboru), vyparsuje data bunek do objektu k pozdejsimu vyuziti
 //@param 	text 	string celeho textoveho souboru track.txt
@@ -122,8 +123,16 @@ function parseData(text){
 	//cyklus, ktery z retezce "text" ulozi do pole "cells" kazdou bunku jako pole se 4 hodnotami
 	for(i; i < text.length; i++){
 
-		if(text[i] == "\n"){										//Pokud je konec radku
+		if(text[i] == "\n"){										//Pokud je konec radku						
+			if(isNaN(+tmpPromenna)){
+				throw new Error("Not supported data! - in row " + (datacells.length + 1) + " there are not only numbers!");
+			}
 			tmpPole.push(+tmpPromenna);								//ulozim do pole posledni hodnotu
+
+			if((tmpPole.length < 4) || (tmpPole.length > 4)){		//Jsou na radku pouze 4 cisla?
+				throw new Error("Not supported data! - in row " + (datacells.length) + " there are more or less than 4 numbers!");
+			}
+
 			datacells.push(tmpPole);								//pole bunky ulozim do "datacells"
 			tmpPole = [];											//vyprazdnim pomocne pole pro bunku
 			tmpPromenna ="";										//vyprazdnim pomocny retezec pro promennou
@@ -134,6 +143,9 @@ function parseData(text){
 		}
 
 		else{														//Jedna se o mezeru
+			if(isNaN(+tmpPromenna)){
+				throw new Error("Not supported data! - in row " + (datacells.length + 1) + " there are not only numbers!");
+			}
 			tmpPole.push(+tmpPromenna);								//ulozim do pole cislo
 			tmpPromenna = "";										//vyprazdnim pomocny retezec pro promennou
 		}
@@ -217,41 +229,17 @@ function changeFontText(){
 }
 
 function makePDF(){
-	var newsvg = d3.select('#svgContainer1').attr("title", "test2")
-        .attr("version", 1.1)
-        .attr("xmlns", "http://www.w3.org/2000/svg")
-        .node().parentNode.innerHTML;	
-
-    console.log(newsvg);
-	/*var svgAsText = new XMLSerializer().serializeToString(newsvg);
-	doc.addSVG(svgAsText, 20, 20, doc.internal.pageSize.width);
-	doc.save('Test.pdf');*/
-	/*
-    var test = $.get('svgContainer1', function(svgText){
-        var svgAsText = new XMLSerializer().serializeToString(svgText.documentElement);
-        doc.addSVG(svgAsText, 20, 20, doc.internal.pageSize.width - 20*2)
-
-        // Save the PDF
-        doc.save('TestSVG.pdf');
-    });*/
-
-
-    try {
-        var isFileSaverSupported = !!new Blob();
-    } catch (e) {
-        alert("blob not supported");
-    }       
-
-    var blob = new Blob([newsvg], {type: "image/svg+xml;base64"});
-    saveAs(blob, "myProfile.svg");
-
+	console.log("Not working yet!");
 }
-/*
-function showId(){
-	showCellId = !showCellId;
-	display();
-}
-*/
+
+$("#idShow").click(function(){
+        $(".idOfCell").toggle(400);
+    });
+
+$("#lifeText").click(function(){
+        $(".lengthOfLifeText").toggle(400);
+});
+
 function vertical(){
 	showFrom = 0;
 	showTo = maxTime;
@@ -289,10 +277,6 @@ function changeScales(){
 		margin = 50;
 	}
 
-	display();
-}
-
-function change(){
 	display();
 }
 
@@ -348,45 +332,42 @@ function lifeText(){
 	display();
 }
 
-
-
-
-
 //Funkce, ktera vytvori Slider
 function sliderManager(){
-	//Vymaze predchozi slider, pokud tam je
-	d3.select('#handle-one').remove();
-	d3.select('#handle-two').remove();
-	d3.select('#sliderRange').remove();
+	$("#slider-range").slider({
+		range: true,
+		min: 0,
+		max: maxTime,
+		values: [0, maxTime],
+		slide: function(event, ui) {
+			d3.select("#textMin").text("From: " + ui.values[ 0 ]);			
+			d3.select("#textMax").text("To: " + ui.values[ 1 ]);
+			showFrom = ui.values[ 0 ];
+			showTo =  ui.values[ 1 ];
 
-	//Vytvori novy slider
-	d3.select('#slider').call(d3.slider().value([0,maxTime]).max(maxTime).step(1)
-						.on("slide", function(evt, value){
+			d3.selectAll(".superCell").each(function(d, i){									
+				if(this.__data__ < showFrom || this.__data__ > showTo){
+					d3.select(this).classed("superCell", false);
+					d3.select(this).classed("hide", true);
+					$(this).toggle(250);
+				}
+			})
 
-							d3.select('#textMin').text(value[0]);
-							showFrom = value[0];
-							d3.select('#textMax').text(value[1]);
-							showTo = value[1];
-							
-							d3.selectAll(".superCell").each(function(d, i){	
-								
-								if(this.__data__ < showFrom || this.__data__ > showTo){
-									d3.select(this).classed("superCell", false);
-									d3.select(this).classed("hide", true);
-								}
-							})
-
-							d3.selectAll(".hide").each(function(d, i){
-								if(this.__data__ >= showFrom && this.__data__ <= showTo){
-									d3.select(this).classed("hide", false);
-									d3.select(this).classed("superCell", true);
-									
-								}
-							})
-						}));
-
-	d3.select('#textMin').text(showFrom);	
-	d3.select('#textMax').text(showTo);
+			d3.selectAll(".hide").each(function(d, i){
+				if(this.__data__ >= showFrom && this.__data__ <= showTo){
+					d3.select(this).classed("hide", false);
+					d3.select(this).classed("superCell", true);
+					$(this).toggle(250);									
+				}
+			})
+			
+		},
+		stop: function(event, ui){
+			display();
+		}
+	});
+	d3.select("#textMin").text("From: " + $( "#slider-range" ).slider( "values", 0 ));
+	d3.select("#textMax").text("To: " + $( "#slider-range" ).slider( "values", 1 ));
 }
 
 
@@ -579,7 +560,8 @@ function connectParentChild(positionInGraph, ancestor, container, repairer, chil
 	var ancestorLine = container.append("line")
 								.attr("class", "ancestorLine")
 								.attr("stroke-width", stroke)
-                        		.attr("stroke", colors[4]);
+                        		.attr("stroke", colors[4])
+                        		.classed("superCell", true).datum(child.begin);
 
     if(isVertical){
     	ancestorLine.attr("x1", positionInGraph)
@@ -624,8 +606,8 @@ function displayHorizontal(){
 		destroySVG = true;
 
 		var depth = depthFinder(cells[m]);		
-		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu			
-		
+		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu		
+
 		//Vytvoreni SVG containeru
 		var svgContainer = d3.select("body").select(".graphBox").append("svg")
 											.attr("width", graphBoxWidth)
@@ -775,11 +757,16 @@ function displayXAxis(){
 										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)), svgAxis);
 	});
 
+	var numberOfTicks = 30;
+	if(maxTime < 30){
+		numberOfTicks = maxTime;
+	}
+
 	//variables for axis
 	var xAxis = d3.svg.axis()
 					.scale(xScale)
 					.orient("bottom")
-					.ticks(30);
+					.ticks(numberOfTicks);
 
 	svgAxis.append("g")
 			.attr("class", "axis")
@@ -788,9 +775,9 @@ function displayXAxis(){
 
 	//Attach line of position in the axisGraph
 	svgAxis.append("line")			
-			.attr("x1", linearScaleX(0) + marginX/2)	
+			.attr("x1", linearScaleX(positionLine) + marginX/2)	
 			.attr("y1", 5)
-			.attr("x2", linearScaleX(0) + marginX/2)
+			.attr("x2", linearScaleX(positionLine) + marginX/2)
 			.attr("y2", graphBoxHeightVertical)
 			.attr("stroke-width", 2.5)
 			.attr("stroke", "#e41a1c")
@@ -918,9 +905,9 @@ function displayYAxis(){
 	svgYAxis.append("line")
 			.attr("render-order", "2")
 			.attr("x1", 5)	
-			.attr("y1", linearScaleY(0) + marginX/2)
+			.attr("y1", linearScaleY(positionLine) + marginX/2)
 			.attr("x2", graphBoxWidth)
-			.attr("y2", linearScaleY(0) + marginX/2)
+			.attr("y2", linearScaleY(positionLine) + marginX/2)
 			.attr("stroke-width", 2.5)
 			.attr("stroke", "#e41a1c")
 			.attr("id", "movingLine");
@@ -973,7 +960,7 @@ function displayVertical(){
 	for(m; m < cells.length; m++){	
 		destroySVG = true;
 
-		var depth = depthFinder(cells[m]);	
+		var depth = depthFinder(cells[m]);
 
 		var w = Math.pow(2,  depth) * scaler - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu					
 

@@ -77,14 +77,6 @@ line.hover {
 	overflow-y: scroll;
 }
 
-.hide{
-	visibility: hidden;
-}
-
-.superCell{
-	visibility: visible;
-}
-
 .cellInfo{
 	width: 450px;
 	height: 100px;

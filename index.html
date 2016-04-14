@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
+<meta charset="UTF-8">
 	<head>
 		<meta charset="utf-8">
 		<title>Cell visualisation</title>
 		<script src="js/d3.js"></script>
-		<script src="js/d3.slider.js"></script>
 		<script src="js/math.min.js"></script> 
                 <script src="js/jquery-1.12.2.min.js"></script>
                 <script src="js/jquery-ui.min.js"></script>                   
-		<link rel="stylesheet" href="css/styl.css" />		
-		<link rel="stylesheet" href="css/d3.slider.css" />
+		<link rel="stylesheet" href="css/styl.css" />	
                 <link rel="stylesheet" href="css/jquery-ui.min.css" />
 
 	</head>
@@ -27,14 +26,10 @@
         		<input name="vertical" 
         			type="button" 
         			value="Vertical" 
-        			onclick="vertical()" />
-
-        		
+        			onclick="vertical()" />        		
 
                         <button id="lifeText">Life</button>
-
-                        <button id="idShow">ID</button>
-                        
+                        <button id="idShow">ID</button>                        
 
         		<input name="changeFontId"
         			type="button"
@@ -73,14 +68,11 @@
 
         	</div>
 
-        	<div class="slider" id="slider"></div>	
+        	<div class="slider" id="slider-range"></div>	
         	<div class="sliderText">
-        		From: <span id="textMin"></span>; To: <span id="textMax"></span>;
-        	</div>
-        	<input name="change"
-        		type="button"
-        		value="Change"
-        		onclick="change()" /> 
+                        <label for= "textMin" id="textMin">From: </label> 
+                        <label for= "textMax" id="textMax">To: </label>
+        	</div>        	
 
                 <input type="file" id="file-input"/>
                 <pre id="file-content"></pre>

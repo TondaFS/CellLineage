@@ -1,15 +1,17 @@
 POPIS TLAÈÍTEK
 ----------------------------------
-HORIZONTAL/VERTICAL - na pøepínání mezi zobrazeními, Vertical ještì není hotový
+HORIZONTAL/VERTICAL - na pøepínání mezi zobrazeními
 
 LIFETEXT - vypíná/zapíná popisek doby života u buòky
 
-AXIS EVERYWHERE - pøepíná mezi jednou hlavní osou a osami, pod každým grafem
+Life/ID - pøepíná zapnutí/vypnutí popiskù v grafu (doba života a ID buòky)
 
-CHANGE SCALES - Pøepíná mezi plným a minimalistickým zobrazením
+Scale - Pøepíná mezi plným a minimalistickým zobrazením
 
 SORT BY TIME/ID - Seøadí zobrazení podle èasu nebo id - prozatím funguje pouze na všechna data (nefunguje pro zúžený výbìr pomocí slideru)
 
-CHANGE (vedle slideru) - vykreslí populace na základì výbìru ze slideru (smaže prázdná místa, která po užšímm výbìru mohou mezi grafy zùstat)
+Font ID/ FontLife/ Font Text - zmìna velikosti fontu pro odpovídající výbìr
+
+PDF - uloží celý graf do PDF (zatím nefunkèní)
 
 VYBRAT SOUBOR - naète soubor s daty a pak jej vykreslí 
