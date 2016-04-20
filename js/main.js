@@ -11,6 +11,7 @@ var positionLine = 0;		//position of line
 
 var cells = []; 			//seznam objektu bunek
 var datacells = [];			//pro ulozeni bunecnych poli
+var cellPopulation = [];	//zaoha vsech ostatnich bunek
 var lifeGraphCells = [];	//array for storing cells for lifeGraph
 
 //variables for info about states of cells
@@ -80,12 +81,60 @@ function readSingleFile(e) {
   	reader.onload = function(e) {  
   		var contents = e.target.result;  				
   		parseData(contents);
-  		changeMaxTime = true; 
+  		changeMaxTime = true;
+  		showFrom = 0;
+  		showTo = maxTime; 
+  		cellPopulation = $.map(cells, function (obj) {
+                      return $.extend(true, {}, obj);
+                  });
+  		console.log("cellPopulation");
   		horizontal();
   		sliderManager();
 	};
   
   reader.readAsText(file);
+}
+
+function removeCells(){
+	while(cells.length > 0){
+		cells.pop();
+	}
+}
+
+function adjustPopulationSelection(population, parent){	
+	var i = 0
+	for(i; i < population.length; i++){
+		console.log(population[i]);
+		if((population[i].begin >= showFrom) && (population[i].begin <= showTo)){
+			adjustChildren(population[i]);
+			cells.push(population[i]);
+		} else{
+			if(population[i].children.length != 0){
+				console.log("Bunka " + population[i].id + " tam nepatri.")
+				adjustPopulationSelection(population[i].children);
+			} else{
+				console.log("nema potomky");
+			}
+		}
+	}
+}
+
+function adjustChildren(cell){
+	if(cell.children.length != 0){
+		console.log("Adjustuju potomka bunky " + cell.id);
+		var k = cell.children.length - 1;
+		for(k; k >= 0; k--){
+			console.log("Cekuju bunku " + k);
+			if(!(cell.children[k].begin <= showTo)){
+				console.log("Vymazano: " + cell.children[k].id);
+				cell.children.splice(k, 1);
+				console.log(cell);
+			} else{
+				console.log("Bunka zustala");
+				adjustChildren(cell.children[k]);
+			}
+		} 
+	}
 }
 
 function checkFileName(name){
@@ -240,9 +289,10 @@ $("#lifeText").click(function(){
         $(".lengthOfLifeText").toggle(400);
 });
 
+
 function vertical(){
-	showFrom = 0;
-	showTo = maxTime;
+	//showFrom = 0;
+	//showTo = maxTime;
 	isVertical = true;
 	display();
 }
@@ -250,8 +300,8 @@ function vertical(){
 function horizontal(){
 	isVertical = false;	
 	everywhereAxis = false;	
-	showFrom = 0;
-	showTo = maxTime;
+	//showFrom = 0;
+	//showTo = maxTime;
 	display();
 }
 
@@ -363,6 +413,11 @@ function sliderManager(){
 			
 		},
 		stop: function(event, ui){
+			removeCells();
+			var cellsCopy = $.map(cellPopulation, function (obj) {
+                      return $.extend(true, {}, obj);
+                  });
+			adjustPopulationSelection(cellsCopy);
 			display();
 		}
 	});
@@ -614,11 +669,9 @@ function displayHorizontal(){
 											.attr("height", h - margin*(depth-1))
 											.datum(cells[m])
 											.on("mouseover", function(d) {
-												if(smallVisualisation){
-													displayThisShit(d);
-												}
+
 											})
-											//.attr("class", "svgContainer" + cells[m].id)
+											.attr("class", "svgContainer")
 											.attr("id", "svgContainer"+cells[m].id)
 											.attr("version", 1.1)
         									.attr("xmlns", "http://www.w3.org/2000/svg");
@@ -708,7 +761,7 @@ function displayHorizontalPopulation(cell, positionY, container, repairer){
 			displayHorizontalPopulation(cell.children[0], positionY - repairer, container, repairer/2);			
 		} else{
 			if(shown){
-				if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
+				if(cell.children[1].begin >= showFrom && cell.children[1].begin <= showTo){
 					connectParentChild(positionY, cell, superCell, repairer, cell.children[1]);
 				}
 			}
@@ -788,22 +841,21 @@ function displayXAxis(){
 //@param 	position 	new position in the graph
 //@param 	svgAxis		axisGraph where the line is 
 function lineX(position, svgAxis){
-	positionLine = position;
-
 	//is position out of axis?
 	if(position > maxTime){
 		position = maxTime;
-	}
-	else if((position) < 0){
+	} else if((position) < 0){
 		position = 0;
 	}
+
+	positionLine = position;	
 	
 	//change position of the line
 	svgAxis.select("#movingLine")
-		.attr("x1", linearScaleX(position) + marginX/2)
-		.attr("x2", linearScaleX(position) + marginX/2);
+		.attr("x1", linearScaleX(positionLine) + marginX/2)
+		.attr("x2", linearScaleX(positionLine) + marginX/2);
 
-	getAdditionalData(position);
+	getAdditionalData(positionLine);
 }
 
 //Funkce, ktera vykresli osu k dane populaci
@@ -970,7 +1022,7 @@ function displayVertical(){
 		svgContainer.append("svg").attr("width", w - margin*(depth-1))
 								 .attr("height", graphBoxHeightVertical);
 
-		displayPopulationV(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli
+		displayHorizontalPopulation(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli
 		
 
 		if(destroySVG){
@@ -983,58 +1035,6 @@ function displayVertical(){
 	}
 }
 
-function displayPopulationV(cell, positionX, container, repairer){
-	var shown = false;
-	var superCell = container.append("g").classed("superCell", true).datum(cell.begin);
-	
-	if((cell.begin >= showFrom) && (cell.begin <= showTo)){
-		destroySVG = false;
-		shown = true;
-
-		displayBeginToEndLine(cell, superCell, positionX);
-
-        if(showLifeLengthText && !smallVisualisation){
-        	displayLengthOfLife(cell, superCell, positionX);        	
-   		}
-
-   		displayBegin(cell, superCell, positionX);
-
-   		
-
-		if(!smallVisualisation && showCellId){
-			displayIdOfCell(cell, superCell, positionX);
-   		}
-	}
-
-	if(cell.children.length != 0){
-		if(shown){
-			if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
-				connectParentChild(positionX, cell, superCell, -repairer, cell.children[0]);
-			}
-		}
-
-		if(cell.children.length == 1){
-			displayPopulationV(cell.children[0], positionX - repairer, container, repairer/2);
-		} else{
-			if(shown){
-				if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){
-					connectParentChild(positionX, cell, superCell, repairer, cell.children[1]);
-				}
-			}
-			displayPopulationV(cell.children[0], positionX - repairer, container, repairer/2);
-			displayPopulationV(cell.children[1], positionX + repairer, container, repairer/2);
-		}
-
-		if(shown){
-			displayMitosis(cell, superCell, positionX);
-		}
-
-	} else{	
-		if((cell.begin >= showFrom && cell.begin <= showTo) && cell.end != maxTime){
-			displayEnd(cell, superCell, positionX);
-		}
-	}
-}
 
 /**************************************************************
    GGRAPH OF STATES + LIFE GRAPH
@@ -1065,7 +1065,8 @@ function getAdditionalData(position){
 	var life = d3.select("body").select(".interestingInfo").append("svg")
 					.attr("width", 350)
 					.attr("height", 105)
-					.attr("class", "stats");
+					.attr("class", "stats")
+					.attr("id", "stat");
 
 	//display bars of states
 	for(var i = 0; i < 4; i++){
