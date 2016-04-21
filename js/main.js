@@ -1,18 +1,19 @@
 /***************************************************************
 	VARIABLES
 ***************************************************************/
-var maxTime = 0;			//Maximalni doba zaznamu
-var margin = 50;			//okraj SVG - menitelny v ramci scales!
-var marginX = 50;			//margin for X - nemenitelny
-var polomer = 7;			//polomer kruhu
-var stroke = 3;				//sirka linek
-var scaler = 50;			//rozpeti na osach
-var positionLine = 0;		//position of line
+var maxTime = 0;					//highest end time in file
+var margin = 50;					//margin of SVG - it changes during change of scale
+var marginX = 50;					//margin for X - doesnt change at all
+var margLife = 60;					//margin for LifeGraph
+var radius = 9;						//radius
+var stroke = 4;						//sirka of lines
+var scaler = 60;					//scale on axis
+var positionLine = 0;				//position of line in axis
 
-var cells = []; 			//seznam objektu bunek
-var datacells = [];			//pro ulozeni bunecnych poli
-var cellPopulation = [];	//zaoha vsech ostatnich bunek
-var lifeGraphCells = [];	//array for storing cells for lifeGraph
+var cells = []; 					//array of cells, which will display (chnage when using slider)
+var datacells = [];					//array for storing cell arrays during parsing the file
+var cellPopulation = [];			//array of all cells from file (doesnt change at all)
+var lifeGraphCells = [];			//array for storing cells for lifeGraph
 
 //variables for info about states of cells
 var begin = 0;
@@ -27,22 +28,20 @@ var isVertical = false;					//is vertical display choosed?
 var changeMaxTime = false;				//should i change maxTime?
 var showFrom = 0;						
 var showTo = 0;							
-var everywhereAxis = false;				//Zobrazeni osy u kazdeho grafu				
-var destroySVG = false;					
-var smallVisualisation = false;
-var showLifeLengthText = true;	
-var showCellId = true;
-var textHeight = ["12px", "14px", "16px", "18px", "20px"];				
-var margLife = 60;						//Okraj pro LifeGraph
+var everywhereAxis = false;				//should i show axis everywhere?				
+var smallVisualisation = false;			//should i show small visualisation?
+var showLifeLengthText = true;			//should i show the text of legth of life?
+var showCellId = true;					//should i show the id of cell?
+			
+//which font size is active?
 var activeFontId = 1;
 var activeFontLife = 1;
 var activeFontText = 1;
 
 var linearScaleX;						//Linear scale for X axis
 var linearScaleY;						//Linear scale for y axis
-var graphBoxWidth = 1000;				//Sirka grafu s rodokmeny
-var graphBoxHeightVertical = 900;		//Height of graph box for vertical display
-
+var graphBoxWidth = 1000;				//width of graphBox
+var graphBoxHeightVertical = 890;		//Height of graph box for vertical display
 
 var description = ["BEGIN", "END", "MITOSIS", "ALIVE"];
 
@@ -50,9 +49,104 @@ var description = ["BEGIN", "END", "MITOSIS", "ALIVE"];
 var colors = 			["#377eb8", "#e41a1c", "#4daf4a", "#984ea3", "#000000"];
 var colorsHovering = 	["#87b1d4", "#ee7576", "#94cf92", "#c194c7", "#666666"];
 
+var textHeight = ["12px", "14px", "16px", "18px", "20px"];	
+
+var helpBasic = "To display your data, load the file via <b>Load</b> button above. Only <i><b>.txt</b></i> format is supported, and the data itself"
+				+ " have to be in defined style. <br>Which means: every line should have 4 numbers separated by gap. These number are: ID BEGIN END PARENT."
+				+ "<br><br>After choosing the file, the app will display the <b>Graph of Cell Population</b>. More info about that is in the next <b>HELP</b> button."
+				+ "<br><br>You can switch the <i>vertical</i> and <i>horizontal</i> display by clicking the appropriate buttons."
+				+ "<br><br>You can also switch display of full and minimalistic graph by clicking on <b>Scale</b> button."
+				+ "<br><br>By clicking on <b>ID</b> and <b>Life</b> buttons you will show/hide descriptions in the graph."
+				+ "<br><br>Clicking on <b>Time</b> or <b>Sort ID</b> buttons the whole graph will sort by the time or by the ids of cells"
+				+ "<br><br><b>PDF</b> button will save whole graph into pdf.";
+
+var helpGraphOfCells = "<b>The Graph of Cell Population</b> shows the lineage of all cells from the video."
+						+ "<br><br><b>Blue circles</b> (BEGIN) represents the frame (time), where the cell firstly appeared. These circles are connected "
+						+ "via black line with <b>Red</b> (END) or <b>Green</b> (MITOSIS) circles. These represents the last time of cell in the video. If it is <b>red</b>"
+						+ " it means the cell died. If it is <b>green</b> it means the cell has atleast one descendant and the <i>mitosis</i> occured."
+						+ "<br><br> Each cell has it's <b>ID</b> besides it's blue circle. Above the black line is showed the number of frames the cell was alive."
+						+ "<br><br> The graph can be restricted by handlers of the <b>slider</b> in the top. By moving, the graph will check if the BEGIN frame"
+						+ "of the cell belongs to the chosen selection. If not, the graph will adapt and remove all unapropriate cells. By moving handlers back, "
+						+ "the cells will show up again (after \"dropping\" the handler."
+						+ "<br><br>By clickinkg on the elements in the graph, the info about that elements and the cells will show up on the right."
+						+ "<br><br>There is also the axis with red line. Values represents the frames (time) and the red line the specific frame (time) in the video."
+						+ "By clicking on the axis, the line will change it's position to the chosen frame. Also the additional information about things that occured "
+						+ "in that frame - <b>The Graph of States</b> and <b>Graph of Life</b> will show up on the right. More inf about these graphs in next HELP button."
+						+ "<br>You can change the position of the red line also by pressing the <i>left</i> and <i>right</i> arrow keys.";
+
+var helpGraphOfStates = "<b>The Graph of States</b> and <b>Graph of Life</b> shows additional information about cells in certain frame."
+						+ "<br><br><b>The Graph of States</b> shows what happened in the time specified by the red line. It will provide information about"
+						+ "number of cells which BEGAN in the given frame, number of cells which END, number of MITOSIS and also number of currently LIVING cells."
+						+ "These cells are than represented in the Graph of Life."
+						+ "<br><br><b>The Graph of Life</b> shows the minimalistic line of life of currently living cells.";
+
 //preparing jquery
 $( document ).ready(function() {
     console.log( "jquery ready!" );
+});
+
+function showWarningDialog(){
+	
+	$( "#warningDialog" ).dialog({
+      resizable: false,
+      width:500,
+      height:230,
+      modal: true,
+      buttons: {
+        "Close": function() {
+          $( this ).dialog( "close" );
+        }
+      }
+    });
+}
+
+$(document).keydown(function(e) {
+    switch(e.which) {
+        case 37: // left
+			if(isVertical){
+				lineY(positionLine -= 1);
+			} else{
+				lineX(positionLine -= 1);
+			}
+        break;
+        case 39: // right
+			if(isVertical){
+				lineY(positionLine += 1);
+			} else{
+				lineX(positionLine += 1);
+			}
+        break;
+
+        default: return; // exit this handler for other keys
+    }
+    e.preventDefault(); // prevent the default action (scroll / move caret)
+});
+
+ $( "#dialog" ).dialog({
+    autoOpen: false,
+    width:800,
+    height:700,
+    show: {
+        effect: "blind",
+        duration: 1000
+    },
+    hide: {
+        effect: "blind",
+        duration: 1000
+    }
+});
+ 
+$( "#helpBasic" ).click(function() {
+   	document.getElementById("helpText").innerHTML = helpBasic;
+    $( "#dialog" ).dialog( "open" );
+});
+$( "#helpGraphOfCells" ).click(function() {
+   	document.getElementById("helpText").innerHTML = helpGraphOfCells;
+    $( "#dialog" ).dialog( "open" );
+});
+$( "#helpGraphOfStates" ).click(function() {
+   	document.getElementById("helpText").innerHTML = helpGraphOfStates;
+    $( "#dialog" ).dialog( "open" );
 });
 
 
@@ -60,7 +154,7 @@ $( document ).ready(function() {
 /**************************************************************
 	LOAD DATA
 ***************************************************************/
-//Reakce na nahrani souboru 
+//reaction on file upload
 document.getElementById('file-input')
   .addEventListener('change', readSingleFile, false);
 
@@ -73,7 +167,9 @@ function readSingleFile(e) {
   	}
 
   	if(checkFileName(fileName) != 0){
-  		throw new Error("Not supported format - file is not .txt!");
+  		document.getElementById("p1").innerHTML = "Not supported format - file is not .txt!";
+  		showWarningDialog();
+  		throw new Error("Not supported format - File is not .txt!");
   		return;
   	}
 
@@ -87,7 +183,6 @@ function readSingleFile(e) {
   		cellPopulation = $.map(cells, function (obj) {
                       return $.extend(true, {}, obj);
                   });
-  		console.log("cellPopulation");
   		horizontal();
   		sliderManager();
 	};
@@ -95,48 +190,44 @@ function readSingleFile(e) {
   reader.readAsText(file);
 }
 
-function removeCells(){
-	while(cells.length > 0){
-		cells.pop();
-	}
-}
 
-function adjustPopulationSelection(population, parent){	
+//Function will change the cell selection for display bassed on slider
+//@param	population 		array of cells, from which the functoin will do the selection
+function adjustPopulationSelection(population){	
 	var i = 0
+
+	//cycle checks if the first "root" cell is in the restriction time from slider
+	//YES: 		check if its children are in the restriction and store this "root" cell in cells 	
+	//NO: 		if cell has children, call this function with array of children
 	for(i; i < population.length; i++){
-		console.log(population[i]);
 		if((population[i].begin >= showFrom) && (population[i].begin <= showTo)){
 			adjustChildren(population[i]);
 			cells.push(population[i]);
 		} else{
 			if(population[i].children.length != 0){
-				console.log("Bunka " + population[i].id + " tam nepatri.")
 				adjustPopulationSelection(population[i].children);
-			} else{
-				console.log("nema potomky");
-			}
+			} 
 		}
 	}
 }
 
+
+//Function will check if the children of the cell are in the restriction time from slider, if not, they are removed from the list of children
+//@param	cell 		cell which the function will check
 function adjustChildren(cell){
 	if(cell.children.length != 0){
-		console.log("Adjustuju potomka bunky " + cell.id);
 		var k = cell.children.length - 1;
 		for(k; k >= 0; k--){
-			console.log("Cekuju bunku " + k);
 			if(!(cell.children[k].begin <= showTo)){
-				console.log("Vymazano: " + cell.children[k].id);
 				cell.children.splice(k, 1);
-				console.log(cell);
 			} else{
-				console.log("Bunka zustala");
 				adjustChildren(cell.children[k]);
 			}
 		} 
 	}
 }
 
+//Function will check, if the file is .txt format
 function checkFileName(name){
 	var length = name.length;
 	var i = length - 4;
@@ -145,16 +236,16 @@ function checkFileName(name){
 	return str1.localeCompare(str2);
 }
 
-//Funkce, ktera ze vstupniho textoveho retezce (souboru), vyparsuje data bunek do objektu k pozdejsimu vyuziti
-//@param 	text 	string celeho textoveho souboru track.txt
+//Function will take string array (=input file), and store all "root" cells with its children (and children of its children...) 
+//to "cells" array of cell objects
+//@param 	text 	string array of whole .txt file
 function parseData(text){			
-	var tmpPole = [];												//Pomocne pole pro ulozeni vsech 4 hodnot bunky
-	var tmpPromenna = "";											//pomocny string pro ukladani cisel
-	var i = 0;														//promenna pro pruchod prvniho for cyklu
-	var z = 0;														//promenna pro pruchod druheho for cyklu
-	index = 0;														//promenna na uchovani informace o rodici
+	var tmpPole = [];												//temporary array for storing all 4 numbers of cell (id, begin, end, parent)
+	var tmpPromenna = "";											//temporary string for storing nummbers
+	var i = 0;														
+	var z = 0;														
+	index = 0;														//variable for storing information about parent
 
-	//Vynulovani maximalni delky grafu
 	if(changeMaxTime){
 		maxTime = 0;
 		positionLine = 0;
@@ -169,43 +260,51 @@ function parseData(text){
 		cells.pop();
 	}
 
-	//cyklus, ktery z retezce "text" ulozi do pole "cells" kazdou bunku jako pole se 4 hodnotami
+	//cycle will store each cell from text string into "tmpPole" as array with 4 values: [id,begin,end,parent]
 	for(i; i < text.length; i++){
 
-		if(text[i] == "\n"){										//Pokud je konec radku						
+		if(text[i] == "\n"){										//is end of line?						
 			if(isNaN(+tmpPromenna)){
+				document.getElementById("p1").innerHTML = "Not supported data! In line " + (datacells.length + 1) + " there are not only numbers!";
+				showWarningDialog();
 				throw new Error("Not supported data! - in row " + (datacells.length + 1) + " there are not only numbers!");
 			}
-			tmpPole.push(+tmpPromenna);								//ulozim do pole posledni hodnotu
+			tmpPole.push(+tmpPromenna);								//store the last value int array
 
-			if((tmpPole.length < 4) || (tmpPole.length > 4)){		//Jsou na radku pouze 4 cisla?
+			if((tmpPole.length < 4) || (tmpPole.length > 4)){		//were there 4 values in the line
+				document.getElementById("p1").innerHTML = "Not supported data! In line " + (datacells.length) + " there are more or less than 4 numbers!";
+				showWarningDialog();
 				throw new Error("Not supported data! - in row " + (datacells.length) + " there are more or less than 4 numbers!");
 			}
 
-			datacells.push(tmpPole);								//pole bunky ulozim do "datacells"
-			tmpPole = [];											//vyprazdnim pomocne pole pro bunku
-			tmpPromenna ="";										//vyprazdnim pomocny retezec pro promennou
+			datacells.push(tmpPole);								//array is stored into "datacells"
+			tmpPole = [];											
+			tmpPromenna ="";										
 		}
 
-		else if(text[i] != " "){									//Pokud to neni mezera
-			tmpPromenna += text[i]; 								//Jedna se o cifru cisla, ulozim do pomocneho retezce pro promennou
+		else if(text[i] != " "){									//if it is not the break
+			tmpPromenna += text[i]; 								//its digit of value -> storing to tmpPromenna
 		}
 
-		else{														//Jedna se o mezeru
+		else{														//it is the break
+			//if the last value is not the number (its char or something else) -> it is not supported file!
 			if(isNaN(+tmpPromenna)){
+				document.getElementById("p1").innerHTML = "Not supported data! In line " + (datacells.length + 1) + " there are not only numbers!";
+				showWarningDialog();
 				throw new Error("Not supported data! - in row " + (datacells.length + 1) + " there are not only numbers!");
 			}
-			tmpPole.push(+tmpPromenna);								//ulozim do pole cislo
-			tmpPromenna = "";										//vyprazdnim pomocny retezec pro promennou
+			tmpPole.push(+tmpPromenna);								//the number is stored into tmpPole
+			tmpPromenna = "";										
 		}
 	}	
 
-	//Cyklus, ktery projde vsechny bunky v poli "datacells" a vytvori z nich "objektovy" rodokmen - tzn. objekt predek, majici v sobe potomky atd.
+	//cycle will go through all cells in "datacells" array and create an array of "root" cells,
+	//which will have all its children (and children of its children...) stored inside its own array
 	for(z; z < datacells.length; z++){
-		tmpPole = datacells[z];										//aktualni bunka
-		var parent;													//promenna pro nasledne hledani rodice
+		tmpPole = datacells[z];										
+		var parent;													//who's the parent
 				
-		//vytvoreni noveho objektu bunky s daty: ID, ČAS VZNIKU, ČAS ZÁNIKU/MITOTICKÉ DĚLENÍ, SEZNAM POTOMKŮ
+		//creating the new object of cell: ID, BEGIN TIME, END TIME, PARENT ID, ARRAY OF CHILDREN
 		var cell = {
 			id: tmpPole[0],
 			begin: tmpPole[1],
@@ -214,38 +313,47 @@ function parseData(text){
 			children: []
 		}
 
-		if(maxTime < cell.end){										//podminka kontroluje posledni dobu v rodokmenu, pripadne upravi
+		if(maxTime < cell.end){										//change the maxTime if the end time of cell is higher
 			maxTime = cell.end;				
 		}
 
 
-		if(cell.parentID == 0){										//pokud nema bunka rodice
-			cells.push(cell);										//je to prvni bunka v rodokmenu -> novou "populaci" ulozim do seznamu populaci bunek
+		if(cell.parentID == 0){										//cell doesnt have parent ->
+			cells.push(cell);										//its the "root" cell! -> store it into cells (should be into cellPopulation, but i will create copy of it later)			
 		}
-		else{														//pokud ma rodice, patri do jiz existujici "populace"	
-			findParent(cell.parentID, cell, cells);					//vyhleda sveho rodice mezi vsemi existujcimi populacemi a jejich bunkami					
+		else{														//cell has parent ->	
+			findParent(cell.parentID, cell, cells);					//it will be stored into children array of its parent					
 		}
 	}
 }
 
-//Funkce, ktera najde rodice bunky a ulozi ji mezi jeji rodice
-//@param 	parentID	id rodice, ktereho hledam
-//@param	cell 		bunka, kterou chci ulozit
-//@param 	celles 		seznam bunek, ktery aktualne prochazim 
+//Function will find the parent of the cell and store it inside its children array
+//@param 	parentID	id of parent
+//@param	cell 		cell which i want to store
+//@param 	celles 		array of cells, where I look for parent
 
 function findParent(parentID, cell, celles){
 	var j = 0;														
-	for(j; j < celles.length; j++){								//prochazim seznam bunek 
-		if(celles[j].id == parentID){							//pokud je id aktualni bunky rovno hledanemu rodici 
-			celles[j].children.push(cell);						//ulozim bunku mezi jeji potomky	
+	for(j; j < celles.length; j++){								
+		if(celles[j].id == parentID){							//I found the parent!
+			celles[j].children.push(cell);						//store the cell into parent children array	
 			break;
 		}	
-		else if(celles[j].children != null){					//pokud ma bunka potomky					
-			findParent(parentID, cell, celles[j].children);		//zkusim najit rodice mezi nimi
+		else if(celles[j].children != null){					//it is not the parent but it has children				
+			findParent(parentID, cell, celles[j].children);		//try find the parent there!
 		}				
 	}
 }
 
+/**************************************************************
+   SLIDER CHANGES
+***************************************************************/
+//Function will remove cells array
+function removeCells(){
+	while(cells.length > 0){
+		cells.pop();
+	}
+}
 
 
 /**************************************************************
@@ -291,8 +399,6 @@ $("#lifeText").click(function(){
 
 
 function vertical(){
-	//showFrom = 0;
-	//showTo = maxTime;
 	isVertical = true;
 	display();
 }
@@ -300,8 +406,6 @@ function vertical(){
 function horizontal(){
 	isVertical = false;	
 	everywhereAxis = false;	
-	//showFrom = 0;
-	//showTo = maxTime;
 	display();
 }
 
@@ -314,15 +418,15 @@ function changeScales(){
 	smallVisualisation = !smallVisualisation;
 	if(smallVisualisation){
 		scaler = 10;
-		polomer = 2;
+		radius = 2;
 		stroke = 1;
 		
 		margin = 10;
 	}
 	else{
-		scaler = 50;
-		polomer = 7;
-		stroke = 3;
+		scaler = 60;
+		radius = 9;
+		stroke = 4;
 		
 		margin = 50;
 	}
@@ -508,7 +612,7 @@ function displayBegin(cell, cellContainer, positionInGraph){
     									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
     													.html("Cell: <b>" + cell.id + "</b><br/>Begin Frame: <b>" + cell.begin + "</b><br/>End or mitosis in Frame: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
     								})
-    								.attr("r", polomer)
+    								.attr("r", radius)
 			   						.attr("fill", colors[0]);
 
 	if(isVertical){
@@ -560,7 +664,7 @@ function displayMitosis(cell, cellContainer, positionInGraph){
     									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
     													.html("Mitotis of Cell: <b>" + cell.id + "</b><br/>In Frame: <b>" + cell.end + "</b><br/>New cells: <b>" + childrenText+"</b>")
     							 	 })	
-    							 	 .attr("r", polomer)
+    							 	 .attr("r", radius)
 			   					 	 .attr("fill", colors[2]);
 	
 	if(isVertical){
@@ -592,7 +696,7 @@ function displayEnd(cell, cellContainer, positionInGraph){
     								d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
     												 .html("End of Cell: <b>" + cell.id + "</b><br/>In Frame: <b>" + cell.end+"</b>")
     							 })
-    							 .attr("r", polomer)
+    							 .attr("r", radius)
 			   					 .attr("fill", colors[1]);
 
     if(isVertical){
@@ -657,9 +761,6 @@ function displayHorizontal(){
 
 	//Vykresleni vsech bunecnych populaci
 	for(m; m < cells.length; m++){
-		//nastvaveni, ze se ma smazat pro pripad, ze se nevykresli zadna bunka
-		destroySVG = true;
-
 		var depth = depthFinder(cells[m]);		
 		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu		
 
@@ -677,24 +778,15 @@ function displayHorizontal(){
         									.attr("xmlns", "http://www.w3.org/2000/svg");
 
 		
-		displayHorizontalPopulation(cells[m], (h - margin*(depth-1))/2, svgContainer, (h - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli	
+		displayPopulation(cells[m], (h - margin*(depth-1))/2, svgContainer, (h - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli	
 		
-		//Pokud se do svgConatineru nic nevykreslilo, smaze jej
-		if(destroySVG){
-			svgContainer.remove();
-		} else{
-			//Vykresleni vlastni osy k dane populaci
-			if(everywhereAxis && !smallVisualisation){
-				displayEverywhereXAxis(maxTime);
-			}
+		//Vykresleni vlastni osy k dane populaci
+		if(everywhereAxis && !smallVisualisation){
+			displayEverywhereXAxis(maxTime);
 		}
+		
 	}
 	getAdditionalData(positionLine);		
-}
-
-function displayThisShit(cell){
-	console.log("Displaying this Shit: " + cell.id);
-
 }
 
 //Funkce, ktera zjisti hloubku dane bunecne populace, pro spravne vetveni a zobrazeni v grafu
@@ -729,54 +821,32 @@ function depthFinder(cell){
 //@param	positionY		pozice Y, kde vykreslim aktualni bunku
 //@param	container 		SVG container, kam vykresluji
 //@param 	repairer		hodnota o kolik se maji potomci posunout
-function displayHorizontalPopulation(cell, positionY, container, repairer){	
-	var shown = false;
-	var superCell = container.append("g").classed("superCell", true).datum(cell.begin);
-
-	if((cell.begin >= showFrom) && (cell.begin <= showTo)){
-		destroySVG = false;
-		shown = true;
-
-		displayBeginToEndLine(cell, superCell, positionY);
-        
-        if(showLifeLengthText && !smallVisualisation){
-        	displayLengthOfLife(cell, superCell, positionY);
-   		}   		
-
-   		displayBegin(cell, superCell, positionY);			   								
+function displayPopulation(cell, positionY, container, repairer){	
+	var superCell = container.append("g").classed("superCell", true).datum(cell.begin);	
+	displayBeginToEndLine(cell, superCell, positionY);
+       
+    if(showLifeLengthText && !smallVisualisation){
+       	displayLengthOfLife(cell, superCell, positionY);
+	} 
+   	displayBegin(cell, superCell, positionY);			   								
 		
-		if(!smallVisualisation && showCellId){	
-			displayIdOfCell(cell, superCell, positionY);
-   		}
- 	}
-   			
-   	if(cell.children.length != 0){											//pokud ma bunka potomky, vykreslim je 				
-		if(shown){							//Pokud se vykreslila aktuani bunka, spojim	s potomky
-			if(cell.children[0].begin >= showFrom && cell.children[0].begin <= showTo){		
-				connectParentChild(positionY, cell, superCell, -repairer, cell.children[0]);
-			}
-		}
-			
-		if(cell.children.length == 1){				
-			displayHorizontalPopulation(cell.children[0], positionY - repairer, container, repairer/2);			
-		} else{
-			if(shown){
-				if(cell.children[1].begin >= showFrom && cell.children[1].begin <= showTo){
-					connectParentChild(positionY, cell, superCell, repairer, cell.children[1]);
-				}
-			}
-			displayHorizontalPopulation(cell.children[0], positionY - repairer, container, repairer/2);
-			displayHorizontalPopulation(cell.children[1], positionY + repairer, container, repairer/2);
-		}
+	if(!smallVisualisation && showCellId){	
+		displayIdOfCell(cell, superCell, positionY);
+   	}
 
-		if(shown){
-			displayMitosis(cell, superCell, positionY);
+   	if(cell.children.length != 0){			//pokud ma bunka potomky, vykreslim je 	
+   		connectParentChild(positionY, cell, superCell, -repairer, cell.children[0]);
+		if(cell.children.length == 1){				
+			displayPopulation(cell.children[0], positionY - repairer, container, repairer/2);			
+		} else{
+			connectParentChild(positionY, cell, superCell, repairer, cell.children[1]);
+			displayPopulation(cell.children[0], positionY - repairer, container, repairer/2);
+			displayPopulation(cell.children[1], positionY + repairer, container, repairer/2);
 		}
-	  } else{	
-   			if(cell.begin >= showFrom && cell.begin <= showTo){
-   				if(cell.end != maxTime){	
-   						displayEnd(cell, superCell, positionY);
-			   	}
+		displayMitosis(cell, superCell, positionY);		
+	} else{	
+	  	if(cell.end != maxTime){	
+   			displayEnd(cell, superCell, positionY);
 		}
    	} 
 }  
@@ -807,7 +877,7 @@ function displayXAxis(){
 									.attr("height", 30)
 									.attr("class", "svgAxis")
 									.on("click", function(){
-										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)), svgAxis);
+										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)));
 	});
 
 	var numberOfTicks = 30;
@@ -840,7 +910,7 @@ function displayXAxis(){
 //Function, which will change the position of the line in axis graph
 //@param 	position 	new position in the graph
 //@param 	svgAxis		axisGraph where the line is 
-function lineX(position, svgAxis){
+function lineX(position){
 	//is position out of axis?
 	if(position > maxTime){
 		position = maxTime;
@@ -851,7 +921,7 @@ function lineX(position, svgAxis){
 	positionLine = position;	
 	
 	//change position of the line
-	svgAxis.select("#movingLine")
+	d3.select("#movingLine")
 		.attr("x1", linearScaleX(positionLine) + marginX/2)
 		.attr("x2", linearScaleX(positionLine) + marginX/2);
 
@@ -939,14 +1009,19 @@ function displayYAxis(){
 									.attr("height", graphBoxHeightVertical)
 									.attr("class", "svgYAxis")
 									.on("click", function(){
-										lineY(Math.round(lineScaler(d3.mouse(this)[1] - marginX/2 + 2)), svgYAxis);
+										lineY(Math.round(lineScaler(d3.mouse(this)[1] - marginX/2 + 2)));
 	});
-
+	
+	var numberOfTicks = 30;
+	if(maxTime < 30){
+		numberOfTicks = maxTime;
+	}
+							
 	//variables for axis
 	var yAxis = d3.svg.axis()
 					.scale(yScale)
 					.orient("left")
-					.ticks(30);
+					.ticks(numberOfTicks);
 
 	svgYAxis.append("g").attr("render-order", "1")
 			.attr("class", "axis")
@@ -968,9 +1043,7 @@ function displayYAxis(){
 //Function, which will change the position of the line in axis graph
 //@param 	position 	new position in the graph
 //@param 	svgAxis		axisGraph where the line is 
-function lineY(position, svgAxis){
-	positionLine = position;
-
+function lineY(position){
 	//is position out of axis?
 	if(position > maxTime){
 		position = maxTime;
@@ -978,27 +1051,24 @@ function lineY(position, svgAxis){
 	else if((position) < 0){
 		position = 0;
 	}
-	
+	positionLine = position;
+
 	//change position of the line
-	svgAxis.select("#movingLine")
-		.attr("y1", linearScaleY(position) + marginX/2)
-		.attr("y2", linearScaleY(position) + marginX/2);
+	d3.select("#movingLine")
+		.attr("y1", linearScaleY(positionLine) + marginX/2)
+		.attr("y2", linearScaleY(positionLine) + marginX/2);
 
 	getAdditionalData(position);
 }
 
 function displayVertical(){	
-	d3.selectAll("svg").remove();
-	
-	var m = 0;
-
-	
+	d3.selectAll("svg").remove();	
+	var m = 0;	
 	linearScaleY = d3.scale.linear()							//scaler for vertical display
 						 .domain([0, maxTime])
 						 .range([0, graphBoxHeightVertical - marginX]);	
 
 	displayYAxis();
-
 	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
 										.attr("width", widthOfGraphBoxSVG() + 35)
 										.attr("height", graphBoxHeightVertical)
@@ -1006,14 +1076,10 @@ function displayVertical(){
 										.attr("version", 1.1)
         								.attr("xmlns", "http://www.w3.org/2000/svg");
 
-	var positionInGraphBoxSVG = 35;
-	
+	var positionInGraphBoxSVG = 35;	
 
 	for(m; m < cells.length; m++){	
-		destroySVG = true;
-
 		var depth = depthFinder(cells[m]);
-
 		var w = Math.pow(2,  depth) * scaler - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu					
 
 		//Vytvoreni SVG containeru
@@ -1022,15 +1088,8 @@ function displayVertical(){
 		svgContainer.append("svg").attr("width", w - margin*(depth-1))
 								 .attr("height", graphBoxHeightVertical);
 
-		displayHorizontalPopulation(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli
-		
-
-		if(destroySVG){
-			svgContainer.remove();
-		} else{
-			positionInGraphBoxSVG += (w - margin*(depth-1)); 			
-		}
-
+		displayPopulation(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);
+		positionInGraphBoxSVG += (w - margin*(depth-1)); 
 		getAdditionalData(positionLine);
 	}
 }

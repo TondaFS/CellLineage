@@ -83,10 +83,21 @@
 		<div class="graphBox"></div>
 
 		<div class="description">
-			<div class="cellInfo"></div>                        
-			<div class="interestingInfo"></div>	
-                        <div class="lifeGraph"></div>			
+			<div class="cellInfo"></div>
+                        <div class="graphOfStatesInfo"> <br><b>HELP</b><br>
+                                                        <button id="helpBasic">Basic</button><br>
+                                                        <button id="helpGraphOfCells">Cell Lineage</button><br>
+                                                        <button id="helpGraphOfStates">Graph of States</button><br>
+                                                        <div id="dialog" title="Cell Visualisation"><p id="helpText"></p></div></div>                        
+			<div class="interestingInfo"></div>                        
+                        <div class="lifeGraph"></div>
+                        <div id="warningDialog" title="Error when loading data!">
+                                <p id="p1"></p>                        
+                        </div>  
+
+                        			
 		</div>
+
 		<script src="js/main.js"></script>		
 	</body>
 </html>

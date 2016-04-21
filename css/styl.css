@@ -19,6 +19,10 @@
 	font-weight: bold;	
 }
 
+body {
+   
+}
+
 line.hover {
 	stroke: #C0C0C0;
 }
@@ -47,12 +51,10 @@ line.hover {
 .svgAxis{
 	position: fixed;
 	top: 35px;
-	/*left: 0px;*/
 }
 
 .svgYAxis{
 	position: fixed;
-	background-color: white;
 	top: 35px;
 	left: 0px;
 }
@@ -70,7 +72,7 @@ line.hover {
 	clear:both;
 	float:left;
 	width: 1020px;
-	height: 920px;
+	height: 910px;
 	position: fixed;
 	top: 35px;
 	overflow-x: scroll;	
@@ -78,22 +80,27 @@ line.hover {
 }
 
 .cellInfo{
-	width: 450px;
-	height: 100px;
+	float:left;
+	width: 225px;
+	height: 90px;
+}
+
+.graphOfStatesInfo{
+	height: 90px;
+	text-align: left;
 }
 
 .interestingInfo{	
-	top: 100px;	
+	top: 90px;	
 	width: 450px;
 	height: 110px;
 }
 
 .lifeGraph{
-	top: 220px;
+	top: 250px;
 	width: 450px;
-	height: 690px;
+	height: 650px;
 	overflow-y: scroll;
-
 }
 
 .bar {
