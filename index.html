@@ -30,8 +30,9 @@
         			value="Vertical" 
         			onclick="vertical()" />        		
 
+                        <button id="idShow">ID</button>   
                         <button id="lifeText">Life</button>
-                        <button id="idShow">ID</button>                        
+                                             
 
         		<input name="changeFontId"
         			type="button"
@@ -83,13 +84,13 @@
 		<div class="graphBox"></div>
 
 		<div class="description">
-			<div class="cellInfo"></div>
+			<div class="cellInfo" id="cellInfo"></div>
                         <div class="graphOfStatesInfo"> <b>HELP</b><br>
                                                         <button id="helpBasic">Basic</button><br>
-                                                        <button id="helpGraphOfCells">Cell Lineage</button><br>
+                                                        <button id="helpGraphOfCells">Cell Population Graph</button><br>
                                                         <button id="helpGraphOfStates">Graph of States</button><br>
                                                         <div id="dialog" title="Cell Visualisation"><p id="helpText"></p></div></div>                        
-			<div class="interestingInfo"></div>                        
+			<div class="interestingInfo" id="interestingInfoText"></div>                        
                         <div class="lifeGraph"></div>
                         <div id="warningDialog" title="Error when loading data!">
                                 <p id="p1"></p>                        

@@ -93,11 +93,11 @@ line.hover {
 .interestingInfo{	
 	top: 90px;	
 	width: 450px;
-	height: 110px;
+	height: 140px;
 }
 
 .lifeGraph{
-	top: 250px;
+	top: 280px;
 	width: 450px;
 	height: 650px;
 	overflow-y: scroll;

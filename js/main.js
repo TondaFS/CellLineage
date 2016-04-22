@@ -32,6 +32,7 @@ var everywhereAxis = false;				//should i show axis everywhere?
 var smallVisualisation = false;			//should i show small visualisation?
 var showLifeLengthText = true;			//should i show the text of legth of life?
 var showCellId = true;					//should i show the id of cell?
+var displayScale = true;
 			
 //which font size is active?
 var activeFontId = 1;
@@ -51,6 +52,7 @@ var colorsHovering = 	["#87b1d4", "#ee7576", "#94cf92", "#c194c7", "#666666"];
 
 var textHeight = ["12px", "14px", "16px", "18px", "20px"];	
 
+//Texts for dialog windows
 var helpBasic = "To display your data, load the file via <b>Load</b> button above. Only <i><b>.txt</b></i> format is supported, and the data itself"
 				+ " have to be in defined style. <br>Which means: every line should have 4 numbers separated by gap. These number are: ID BEGIN END PARENT."
 				+ "<br><br>After choosing the file, the app will display the <b>Graph of Cell Population</b>. More info about that is in the next <b>HELP</b> button."
@@ -79,6 +81,8 @@ var helpGraphOfStates = "<b>The Graph of States</b> and <b>Graph of Life</b> sho
 						+ "number of cells which BEGAN in the given frame, number of cells which END, number of MITOSIS and also number of currently LIVING cells."
 						+ "These cells are than represented in the Graph of Life."
 						+ "<br><br><b>The Graph of Life</b> shows the minimalistic line of life of currently living cells.";
+
+var interestingInfoText = "<br><b>Actual frame: </b>";
 
 //preparing jquery
 $( document ).ready(function() {
@@ -128,14 +132,16 @@ $(document).keydown(function(e) {
     height:700,
     show: {
         effect: "blind",
-        duration: 1000
+        duration: 500
     },
     hide: {
         effect: "blind",
-        duration: 1000
+        duration: 500
     }
 });
- 
+
+
+
 $( "#helpBasic" ).click(function() {
    	document.getElementById("helpText").innerHTML = helpBasic;
     $( "#dialog" ).dialog( "open" );
@@ -167,7 +173,7 @@ function readSingleFile(e) {
   	}
 
   	if(checkFileName(fileName) != 0){
-  		document.getElementById("p1").innerHTML = "Not supported format - file is not .txt!";
+  		document.getElementById("p1").innerHTML = "Not supported format - file is not <b>.txt</b>!";
   		showWarningDialog();
   		throw new Error("Not supported format - File is not .txt!");
   		return;
@@ -185,6 +191,7 @@ function readSingleFile(e) {
                   });
   		horizontal();
   		sliderManager();
+  		document.getElementById("cellInfo").innerHTML = "";
 	};
   
   reader.readAsText(file);
@@ -431,7 +438,9 @@ function changeScales(){
 		margin = 50;
 	}
 
-	display();
+	if(displayScale){
+		display();
+	}	
 }
 
 function display(){
@@ -1078,20 +1087,56 @@ function displayVertical(){
 
 	var positionInGraphBoxSVG = 35;	
 
+	var divTooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+
 	for(m; m < cells.length; m++){	
 		var depth = depthFinder(cells[m]);
 		var w = Math.pow(2,  depth) * scaler - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu					
 
 		//Vytvoreni SVG containeru
-		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g");
-
+		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id);
+/*
 		svgContainer.append("svg").attr("width", w - margin*(depth-1))
 								 .attr("height", graphBoxHeightVertical);
+*/
 
+		/*
+		if(smallVisualisation){
+		svgContainer.on("mouseover", function(){
+				console.log("Moseover " + this.__data__);
+				if(smallVisualisation){			
+					divTooltip.transition().duration(500).style("opacity", 0);
+					divTooltip.transition().duration(200).style("opacity", .9);
+					divTooltip.append("svg").attr("svg", svgTooltip(cells[this.__data__])).style("left", d3.event.pageX + "px")
+						.style("top", (d3.event.pageY - 28) + "px");
+				}
+			})
+			.on("mouseout", function(){
+				d3.select(".tooltipSVG").remove();
+			});
+		}
+*/
 		displayPopulation(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);
 		positionInGraphBoxSVG += (w - margin*(depth-1)); 
 		getAdditionalData(positionLine);
 	}
+}
+
+function svgTooltip(cell){
+	console.log("SVG tooltip with cell " + cell.id);
+	displayScale = false;
+	changeScales();
+	var depthCell = depthFinder(cell);
+	var w = Math.pow(2,  depthCell) * scaler - margin*(depthCell-1);
+
+	var svgContainer = d3.select(".tooltip").append("svg").attr("width", w - margin*(depthCell-1))
+								 .attr("height", graphBoxHeightVertical).attr("class", "tooltipSVG");
+
+	displayPopulation(cell, (w - margin*(depthCell-1))/2, svgContainer, (w - margin*(depthCell-1))/4);
+	changeScales();
+	displayScale = true;
+	console.log(d3.select(".tooltipSVG"));
+	return svgContainer;
 }
 
 
@@ -1116,7 +1161,9 @@ function getAdditionalData(position){
 		checkCell(cells[c], position);
 	}	
 
-	var dataStates = [begin, death, mitosis, lifeGraphCells.length];		//info about possible states
+	var dataStates = [begin, death, mitosis, lifeGraphCells.length];		//info about possible states\
+
+	document.getElementById("interestingInfoText").innerHTML = interestingInfoText + positionLine;
 
 	d3.selectAll(".stats").remove();
 
