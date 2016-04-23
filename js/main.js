@@ -761,9 +761,24 @@ function displayHorizontal(){
 						.range([0, graphBoxWidth - marginX]);
 	
 	//Vykresli pouze hlavni osu
+	
 	if(!everywhereAxis || smallVisualisation){	 
 		displayXAxis();	
 	}
+	
+	var positionInGraphBoxSVG = 35;
+	widthOfGraphBox = widthOfGraphBoxSVG()  + positionInGraphBoxSVG;
+
+	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
+										.attr("width",  graphBoxWidth)
+										.attr("height", widthOfGraphBox)
+										.attr("class", "graphBoxSVG")
+										.attr("version", 1.1)
+        								.attr("xmlns", "http://www.w3.org/2000/svg");
+
+	
+
+	
 
 	//Vytvori prazdny SVG, aby se to vyrovnalo
 	displayBlock();
@@ -772,7 +787,8 @@ function displayHorizontal(){
 	for(m; m < cells.length; m++){
 		var depth = depthFinder(cells[m]);		
 		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu		
-
+		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id).attr("class", "svgContainer").attr("id", "svgContainer"+cells[m].id);
+		/*
 		//Vytvoreni SVG containeru
 		var svgContainer = d3.select("body").select(".graphBox").append("svg")
 											.attr("width", graphBoxWidth)
@@ -785,16 +801,18 @@ function displayHorizontal(){
 											.attr("id", "svgContainer"+cells[m].id)
 											.attr("version", 1.1)
         									.attr("xmlns", "http://www.w3.org/2000/svg");
-
+		*/
 		
-		displayPopulation(cells[m], (h - margin*(depth-1))/2, svgContainer, (h - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli	
+		displayPopulation(cells[m], (h - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (h - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli	
 		
 		//Vykresleni vlastni osy k dane populaci
 		if(everywhereAxis && !smallVisualisation){
 			displayEverywhereXAxis(maxTime);
 		}
+		positionInGraphBoxSVG += (h - margin*(depth-1)); 
 		
 	}
+	displayThatLine(svgContainer, widthOfGraphBox);
 	getAdditionalData(positionLine);		
 }
 
@@ -881,6 +899,7 @@ function displayXAxis(){
 							.range([0, maxTime]);
 
 	//Vytvoreni svg osy
+	
 	var svgAxis = d3.select("body").select(".graphBox").append("svg")
 									.attr("width", graphBoxWidth)
 									.attr("height", 30)
@@ -888,6 +907,14 @@ function displayXAxis(){
 									.on("click", function(){
 										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)));
 	});
+/*
+	var svgAxis = svgContainer.append("g")
+									.attr("width", graphBoxWidth)
+									.attr("height", 30)
+									.attr("class", "svgAxis")
+									.on("click", function(){
+										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)));
+	});*/
 
 	var numberOfTicks = 30;
 	if(maxTime < 30){
@@ -900,20 +927,33 @@ function displayXAxis(){
 					.orient("bottom")
 					.ticks(numberOfTicks);
 
-	svgAxis.append("g")
-			.attr("class", "axis")
+	svgAxis.append("g").attr("class", "axis")
 			.attr("transform", "translate("+ marginX/2 + "," + 5 + ")")
 			.call(xAxis);
 
 	//Attach line of position in the axisGraph
-	svgAxis.append("line")			
+	/*
+	svgContainer.append("line")			
 			.attr("x1", linearScaleX(positionLine) + marginX/2)	
 			.attr("y1", 5)
 			.attr("x2", linearScaleX(positionLine) + marginX/2)
 			.attr("y2", graphBoxHeightVertical)
-			.attr("stroke-width", 2.5)
+			.attr("stroke-width", 1.5)
 			.attr("stroke", "#e41a1c")
 			.attr("id", "movingLine");
+			*/
+}
+
+function displayThatLine(svgContainer, height){
+	svgContainer.append("line")			
+			.attr("x1", linearScaleX(positionLine) + marginX/2)	
+			.attr("y1", 5)
+			.attr("x2", linearScaleX(positionLine) + marginX/2)
+			.attr("y2", height)
+			.attr("stroke-width", 1.5)
+			.attr("stroke", "#e41a1c")
+			.attr("id", "movingLine")
+			.attr("class", "movingLine");
 }
 
 //Function, which will change the position of the line in axis graph
@@ -1078,14 +1118,16 @@ function displayVertical(){
 						 .range([0, graphBoxHeightVertical - marginX]);	
 
 	displayYAxis();
+	var positionInGraphBoxSVG = 35;
+
 	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
-										.attr("width", widthOfGraphBoxSVG() + 35)
+										.attr("width", widthOfGraphBoxSVG() + positionInGraphBoxSVG)
 										.attr("height", graphBoxHeightVertical)
 										.attr("class", "graphBoxSVG")
 										.attr("version", 1.1)
         								.attr("xmlns", "http://www.w3.org/2000/svg");
 
-	var positionInGraphBoxSVG = 35;	
+	
 
 	var divTooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
 
@@ -1118,8 +1160,9 @@ function displayVertical(){
 */
 		displayPopulation(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);
 		positionInGraphBoxSVG += (w - margin*(depth-1)); 
-		getAdditionalData(positionLine);
+		
 	}
+	getAdditionalData(positionLine);
 }
 
 function svgTooltip(cell){
