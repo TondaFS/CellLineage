@@ -51,7 +51,7 @@ line.hover {
 .svgAxis{
 	position: fixed;
 	top: 35px;
-	background-color: white;
+	/*background-color: white;*/
 }
 
 .svgYAxis{

@@ -21,7 +21,7 @@ var mitosis = 0;
 var death = 0;
 
 //zmenit nazev!
-var posunuti = 10;		//Posunuti hodnot v life graphu vedle poctu ZIJE, SMRT, MITOSA...
+var posunuti = 20;		//Posunuti hodnot v life graphu vedle poctu ZIJE, SMRT, MITOSA...
 
 //nastaveni
 var isVertical = false;					//is vertical display choosed?
@@ -44,7 +44,7 @@ var linearScaleY;						//Linear scale for y axis
 var graphBoxWidth = 1000;				//width of graphBox
 var graphBoxHeightVertical = 890;		//Height of graph box for vertical display
 
-var description = ["BEGIN", "END", "MITOSIS", "ALIVE"];
+var description = ["BEGIN", "END", "DIVISION", "ALIVE"];
 
 //colors				 BEGIN  	END 	   MITOSIS    ALIVE  	 LINE     
 var colors = 			["#377eb8", "#e41a1c", "#4daf4a", "#984ea3", "#000000"];
@@ -54,33 +54,36 @@ var textHeight = ["12px", "14px", "16px", "18px", "20px"];
 
 //Texts for dialog windows
 var helpBasic = "To display your data, load the file via <b>Load</b> button above. Only <i><b>.txt</b></i> format is supported, and the data itself"
-				+ " have to be in defined style. <br>Which means: every line should have 4 numbers separated by gap. These number are: ID BEGIN END PARENT."
-				+ "<br><br>After choosing the file, the app will display the <b>Graph of Cell Population</b>. More info about that is in the next <b>HELP</b> button."
+				+ " have to be in defined style. <br>Which means: every line should have 4 numbers separated by space. These number are: ID BEGIN END PARENT."
+				+ "<br><br>After choosing the file, the app will display the <b>Graph of Cell Population</b>. More info about that in the next <b>HELP</b> button."
 				+ "<br><br>You can switch the <i>vertical</i> and <i>horizontal</i> display by clicking the appropriate buttons."
 				+ "<br><br>You can also switch display of full and minimalistic graph by clicking on <b>Scale</b> button."
-				+ "<br><br>By clicking on <b>ID</b> and <b>Life</b> buttons you will show/hide descriptions in the graph."
+				+ "<br><br>By clicking on <b>ID</b>, <b>Life</b> and <b>Line</b> buttons you will show/hide descriptions or the red line in the graph."
+				+ "<br><br>By clicking on <b>Font ID</b> or <b>Font Life</b> you will change the font height."
 				+ "<br><br>Clicking on <b>Time</b> or <b>Sort ID</b> buttons the whole graph will sort by the time or by the ids of cells"
-				+ "<br><br><b>PDF</b> button will save whole graph into pdf.";
+				+ "<br><br>Clicking on <b>Axes</b> you will switch between displaying only one main axis or axes to each cell graph."
+				+ "<br><br><b>PDF</b> button will save whole graph into pdf - not working yet.";
 
 var helpGraphOfCells = "<b>The Graph of Cell Population</b> shows the lineage of all cells from the video."
-						+ "<br><br><b>Blue circles</b> (BEGIN) represents the frame (time), where the cell firstly appeared. These circles are connected "
-						+ "via black line with <b>Red</b> (END) or <b>Green</b> (MITOSIS) circles. These represents the last time of cell in the video. If it is <b>red</b>"
-						+ " it means the cell died. If it is <b>green</b> it means the cell has atleast one descendant and the <i>mitosis</i> occured."
+						+ "<br><br><b>Blue circles</b> (BEGIN) represents the frame (time), where the cell appeared for the first time. These circles are connected "
+						+ "via black line with <b>Red</b> (END) or <b>Green</b> (DIVISION) circles. These represents the last time of cell in the video. If it is <b>red</b>"
+						+ " it means the cell died. If it is <b>green</b> it means the cell has at least one descendant."
 						+ "<br><br> Each cell has it's <b>ID</b> besides it's blue circle. Above the black line is showed the number of frames the cell was alive."
 						+ "<br><br> The graph can be restricted by handlers of the <b>slider</b> in the top. By moving, the graph will check if the BEGIN frame"
-						+ "of the cell belongs to the chosen selection. If not, the graph will adapt and remove all unapropriate cells. By moving handlers back, "
-						+ "the cells will show up again (after \"dropping\" the handler."
+						+ " of the cell belongs to the chosen selection. If not, the graph will adapt and remove all unapropriate cells. By moving handlers back, "
+						+ "the hidden cells will show up again (after \"dropping\" the handler)."
 						+ "<br><br>By clickinkg on the elements in the graph, the info about that elements and the cells will show up on the right."
 						+ "<br><br>There is also the axis with red line. Values represents the frames (time) and the red line the specific frame (time) in the video."
 						+ "By clicking on the axis, the line will change it's position to the chosen frame. Also the additional information about things that occured "
-						+ "in that frame - <b>The Graph of States</b> and <b>Graph of Life</b> will show up on the right. More inf about these graphs in next HELP button."
+						+ "in that frame - <b>The Graph of States</b> and <b>Graph of Life</b> - will show up on the right. More info about these graphs in next HELP button."
 						+ "<br>You can change the position of the red line also by pressing the <i>left</i> and <i>right</i> arrow keys.";
 
 var helpGraphOfStates = "<b>The Graph of States</b> and <b>Graph of Life</b> shows additional information about cells in certain frame."
 						+ "<br><br><b>The Graph of States</b> shows what happened in the time specified by the red line. It will provide information about"
-						+ "number of cells which BEGAN in the given frame, number of cells which END, number of MITOSIS and also number of currently LIVING cells."
+						+ "number of cells which BEGAN in the given frame, number of cells which END, number of DIVISIONS and also number of currently LIVING cells."
 						+ "These cells are than represented in the Graph of Life."
-						+ "<br><br><b>The Graph of Life</b> shows the minimalistic line of life of currently living cells.";
+						+ "<br><br><b>The Graph of Life</b> shows the minimalistic line of life of currently living cells. Each line belongs to the one cell, which ID is shown"
+						+ "on the left side of the black line. Next to the both ends are the frame numbers of BEGIN and END frame of the cell.";
 
 var interestingInfoText = "<br><b>Actual frame: </b>";
 
@@ -404,6 +407,14 @@ $("#lifeText").click(function(){
         $(".lengthOfLifeText").toggle(400);
 });
 
+$("#redLine").click(function(){
+        $(".movingLine").toggle(400);
+});
+
+$("#axisEverywhere").click(function(){
+        axisEverywhere();
+});
+
 
 function vertical(){
 	isVertical = true;
@@ -412,7 +423,7 @@ function vertical(){
 
 function horizontal(){
 	isVertical = false;	
-	everywhereAxis = false;	
+	//everywhereAxis = false;	
 	display();
 }
 
@@ -768,6 +779,10 @@ function displayHorizontal(){
 	
 	var positionInGraphBoxSVG = 35;
 	widthOfGraphBox = widthOfGraphBoxSVG()  + positionInGraphBoxSVG;
+	if(everywhereAxis && !smallVisualisation){
+		widthOfGraphBox += cells.length * 30;
+	}
+
 
 	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
 										.attr("width",  graphBoxWidth)
@@ -776,17 +791,13 @@ function displayHorizontal(){
 										.attr("version", 1.1)
         								.attr("xmlns", "http://www.w3.org/2000/svg");
 
-	
-
-	
-
 	//Vytvori prazdny SVG, aby se to vyrovnalo
 	displayBlock();
 
 	//Vykresleni vsech bunecnych populaci
 	for(m; m < cells.length; m++){
 		var depth = depthFinder(cells[m]);		
-		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vytvoreni vysky daneho svg rodokmenu		
+		var h = (Math.pow(2,  depth) * scaler) - margin*(depth-1) ;		//vyska daneho rodokmenu	
 		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id).attr("class", "svgContainer").attr("id", "svgContainer"+cells[m].id);
 		/*
 		//Vytvoreni SVG containeru
@@ -806,10 +817,12 @@ function displayHorizontal(){
 		displayPopulation(cells[m], (h - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (h - margin*(depth-1))/4);		//zavolani funkce, ktera to vykresli	
 		
 		//Vykresleni vlastni osy k dane populaci
-		if(everywhereAxis && !smallVisualisation){
-			displayEverywhereXAxis(maxTime);
-		}
+		
 		positionInGraphBoxSVG += (h - margin*(depth-1)); 
+		if(everywhereAxis && !smallVisualisation){
+			displayEverywhereXAxis(svgContainer, positionInGraphBoxSVG);
+			positionInGraphBoxSVG += 30;
+		}
 		
 	}
 	displayLineX(svgContainer, widthOfGraphBox);
@@ -902,7 +915,7 @@ function displayXAxis(){
 	
 	var svgAxis = d3.select("body").select(".graphBox").append("svg")
 									.attr("width", graphBoxWidth)
-									.attr("height", 30)
+									.attr("height", 35)
 									.attr("class", "svgAxis")
 									.on("click", function(){
 										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)));
@@ -990,31 +1003,66 @@ function lineX(position){
 }
 
 //Funkce, ktera vykresli osu k dane populaci
-//@param 	xTime	celkova doba, tzn. sirka osy
-function displayEverywhereXAxis(){
+function displayEverywhereXAxis(svgContainer, position){
 	var xScale = d3.scale.linear()
 						.domain([0, maxTime])
 						.range([0, graphBoxWidth - marginX]);	
 
-	var svgAxis = d3.select("body").select(".graphBox").append("svg")
-									.attr("width", graphBoxWidth)
-									.attr("height", 30)
-									.attr("class", "xAxis");
+	var svgAxis = svgContainer.append("g").attr("class", "xAxis");
+
+	/*
 	svgAxis.append("rect")
     		.attr("width", "100%")
     		.attr("height", "100%")
     		.attr("fill", "white");
+    */
+
+    var numberOfTicks = 30;
+	if(maxTime < 30){
+		numberOfTicks = maxTime;
+	}
 
 	//promenne pro osy
 	var xAxis = d3.svg.axis()
 					.scale(xScale)
 					.orient("bottom")
-					.ticks(30);
+					.ticks(numberOfTicks);
 
 	svgAxis.append("g")
 			.attr("class", "axis")
-			.attr("transform", "translate("+ marginX/2 + "," + 5 + ")")
+			.attr("transform", "translate("+ marginX/2 + "," + (5 + position) + ")")
 			.call(xAxis);
+}
+
+//Funkce, ktera vykresli osu k dane populaci
+function displayEverywhereYAxis(svgContainer, position){
+	var yScale = d3.scale.linear()
+						.domain([0, maxTime])
+						.range([0, graphBoxHeightVertical - marginX]);	
+	
+	var svgAxis = svgContainer.append("g").attr("class", "yAxis");
+	/*
+	svgAxis.append("rect")
+    		.attr("width", "100%")
+    		.attr("height", "100%")
+    		.attr("fill", "white");
+    */
+
+    var numberOfTicks = 30;
+	if(maxTime < 30){
+		numberOfTicks = maxTime;
+	}
+
+	//promenne pro osy
+	var yAxis = d3.svg.axis()
+					.scale(yScale)
+					.orient("left")
+					.ticks(numberOfTicks);
+
+	svgAxis.append("g")
+			.attr("class", "axis")
+			.attr("transform", "translate("+ (5 + position) + "," + marginX/2 + ")")
+			.call(yAxis);
 }
 
 //Function will get the text list of children of the cell
@@ -1131,9 +1179,16 @@ function displayVertical(){
 						 .domain([0, maxTime])
 						 .range([0, graphBoxHeightVertical - marginX]);	
 
-	displayYAxis();
+	if(!everywhereAxis || smallVisualisation){	 
+		displayYAxis();
+	}
+
 	var positionInGraphBoxSVG = 35;
+
 	widthOfGraphBox = widthOfGraphBoxSVG()  + positionInGraphBoxSVG;
+	if(everywhereAxis && !smallVisualisation){
+		widthOfGraphBox += cells.length * 30;
+	}
 
 	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
 										.attr("width", widthOfGraphBox)
@@ -1152,6 +1207,10 @@ function displayVertical(){
 
 		//Vytvoreni SVG containeru
 		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id);
+		if(everywhereAxis && !smallVisualisation){
+			displayEverywhereYAxis(svgContainer, positionInGraphBoxSVG);
+			
+		}
 /*
 		svgContainer.append("svg").attr("width", w - margin*(depth-1))
 								 .attr("height", graphBoxHeightVertical);
@@ -1175,6 +1234,9 @@ function displayVertical(){
 */
 		displayPopulation(cells[m], (w - margin*(depth-1))/2 + positionInGraphBoxSVG, svgContainer, (w - margin*(depth-1))/4);
 		positionInGraphBoxSVG += (w - margin*(depth-1)); 
+		if(everywhereAxis && !smallVisualisation){
+			positionInGraphBoxSVG += 30;
+		}
 		
 	}
 	displayLineY(svgContainer, widthOfGraphBox);
