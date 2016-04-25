@@ -812,7 +812,7 @@ function displayHorizontal(){
 		positionInGraphBoxSVG += (h - margin*(depth-1)); 
 		
 	}
-	displayThatLine(svgContainer, widthOfGraphBox);
+	displayLineX(svgContainer, widthOfGraphBox);
 	getAdditionalData(positionLine);		
 }
 
@@ -944,12 +944,24 @@ function displayXAxis(){
 			*/
 }
 
-function displayThatLine(svgContainer, height){
+function displayLineX(svgContainer, height){
 	svgContainer.append("line")			
 			.attr("x1", linearScaleX(positionLine) + marginX/2)	
 			.attr("y1", 5)
 			.attr("x2", linearScaleX(positionLine) + marginX/2)
 			.attr("y2", height)
+			.attr("stroke-width", 1.5)
+			.attr("stroke", "#e41a1c")
+			.attr("id", "movingLine")
+			.attr("class", "movingLine");
+}
+
+function displayLineY(svgContainer, height){
+	svgContainer.append("line")			
+			.attr("x1", 5)	
+			.attr("y1", linearScaleY(positionLine) + marginX/2)
+			.attr("x2", height)
+			.attr("y2", linearScaleY(positionLine) + marginX/2)
 			.attr("stroke-width", 1.5)
 			.attr("stroke", "#e41a1c")
 			.attr("id", "movingLine")
@@ -1077,6 +1089,7 @@ function displayYAxis(){
 			.attr("transform", "translate("+ 30 + "," + marginX/2 + ")")
 			.call(yAxis);
 
+	/*
 	//Attach line of position in the axisGraph
 	svgYAxis.append("line")
 			.attr("render-order", "2")
@@ -1087,6 +1100,7 @@ function displayYAxis(){
 			.attr("stroke-width", 2.5)
 			.attr("stroke", "#e41a1c")
 			.attr("id", "movingLine");
+	*/
 }
 
 //Function, which will change the position of the line in axis graph
@@ -1119,9 +1133,10 @@ function displayVertical(){
 
 	displayYAxis();
 	var positionInGraphBoxSVG = 35;
+	widthOfGraphBox = widthOfGraphBoxSVG()  + positionInGraphBoxSVG;
 
 	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
-										.attr("width", widthOfGraphBoxSVG() + positionInGraphBoxSVG)
+										.attr("width", widthOfGraphBox)
 										.attr("height", graphBoxHeightVertical)
 										.attr("class", "graphBoxSVG")
 										.attr("version", 1.1)
@@ -1162,6 +1177,7 @@ function displayVertical(){
 		positionInGraphBoxSVG += (w - margin*(depth-1)); 
 		
 	}
+	displayLineY(svgContainer, widthOfGraphBox);
 	getAdditionalData(positionLine);
 }
 
