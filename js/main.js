@@ -570,7 +570,7 @@ function displayBeginToEndLine(cell, cellContainer, positionInGraph){
     				  					  .on("click", function(){								//On click show info about life of cell
     											d3.select("body").select(".cellInfo").selectAll("text").remove();
     											d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
-    				 							.html("Cell: <b>" + cell.id + "</b><br/>Lenght of life: <b>" + (cell.end - cell.begin)+"</b>")
+    				 							.html("Cell: <b>" + cell.id + "</b><br/>Length of life: <b>" + (cell.end - cell.begin)+"</b>")
     				  					  })
     				  					  .attr("stroke-width", stroke)
                       					  .attr("stroke", colors[4]); ;
