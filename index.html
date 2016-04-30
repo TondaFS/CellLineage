@@ -3,83 +3,53 @@
 <meta charset="UTF-8">
 	<head>
 		<meta charset="utf-8">
-		<title>Cell visualisation</title>
+		<title>Celllineage Visualisation</title>
 		<script src="js/d3.js"></script>
 		<script src="js/math.min.js"></script> 
                 <script src="js/jquery-1.12.2.min.js"></script>
-                <script src="js/jquery-ui.min.js"></script>                   
+                <script src="js/jquery-ui.min.js"></script>  
+                <script src="js/jquery-input-file-text.js"></script>        
 		<link rel="stylesheet" href="css/styl.css" />	
                 <link rel="stylesheet" href="css/jquery-ui.min.css" />
                 <link rel="stylesheet" href="css/jquery-ui.structure.min.css" />
                 <link rel="stylesheet" href="css/jquery-ui.theme.min.css" />
+                
+
 
 	</head>
 
 	<body>
 
-		<div class="option">
+		<div class="option">  
+                        <div class="buttons">      		
+                                <button id="horizontal">Horizontal</button>
+                                <button id="vertical">Vertical</button>
+                                <button id="axisEverywhere">Axes</button>
+                                <button id="idShow">ID</button>   
+                                <button id="lifeText">Life</button>
+                                <button id="redLine">Line</button>
+                                <button id="fontID">Font ID</button>  
+                                <button id="changeLife">Font Life</button> 
+                                <button id="changeScale">Scale</button>                        
+                                <button id="timeSort">Time</button> 
+                                <button id="idSort">Sort ID</button>
+                                <button id="svgSaver">SVG</button>   
+        	        </div>  
 
-			<div class="buttons">
-				<input name="horizontal" 
-        			type="button" 
-        			value="Horizontal" 
-        			onclick="horizontal()" />
+                        <div class="slider" id="slider-range"></div>    
+                        <div class="sliderText">
+                                <label for= "textMin" id="textMin"></label> 
+                                <label for= "textMax" id="textMax"></label>
 
-        		<input name="vertical" 
-        			type="button" 
-        			value="Vertical" 
-        			onclick="vertical()" />        		
-
-                        <button id="idShow">ID</button>   
-                        <button id="lifeText">Life</button>
-                        <button id="redLine">Line</button>  
-
-        		<input name="changeFontId"
-        			type="button"
-        			value="Font ID"
-        			onclick="changeFontId()" />
-
-                        <input name="changeFontLife"
-                                type="button"
-                                value="Font Life"
-                                onclick="changeFontLife()" />
-
-        		<input name="changeScalers"
-        			type="button"
-        			value="Scale"
-        			onclick="changeScales()" />
-
-                        <button id="axisEverywhere">Axes</button>
-
-                        <input name="pdf"
-                                type="button"
-                                value="PDF"
-                                onclick="makePDF()" />
-
-                        <input name="time"
-                                type="button"
-                                value="Time"
-                                onclick="sortByTime()" />
-
-                        <input name="id"
-                                type="button"
-                                value="Sort ID"
-                                onclick="sortById()" />                       
-
-        	</div>
-
-        	<div class="slider" id="slider-range"></div>	
-        	<div class="sliderText">
-                        <label for= "textMin" id="textMin">From: </label> 
-                        <label for= "textMax" id="textMax">To: </label>
-        	</div>        	
-
-                <input type="file" id="file-input"/>
-                <pre id="file-content"></pre>
-                </div>              		
+                                 
+                        
+                        </div>
+                        <input type="file" id="file-input">
+                                <pre id="file-content"></pre>   
+                        
+                </div>       	                        		
 
 		<div class="graphBox"></div>
-
 		<div class="description">
 			<div class="cellInfo" id="cellInfo"></div>
                         <div class="graphOfStatesInfo"> <b>HELP</b><br>
@@ -92,6 +62,9 @@
                         <div id="warningDialog" title="Error when loading data!">
                                 <p id="p1"></p>                        
                         </div>  
+                        <div id="divisionDialog" title="High abnormal division detected!">
+                                <p id="p2"></p>                        
+                        </div> 
 
                         			
 		</div>
