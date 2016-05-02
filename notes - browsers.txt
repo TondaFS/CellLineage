@@ -1,0 +1,6 @@
+Chrome - Everything seems OK and working
+Firefox - Everything seems OK and working
+Internet Explorer - nefunguje ukládání do svg, ale zobrazuje se cesta k souboru 
+Opera - neobjevuje se spodek grafu - u vertical nejde vidìt posuvník
+Maxthron - jak u Opery, neobjevuje se spodek grafu
+Safari - vùbec nereaguje Load File tlaèítko -> nefunkèní (google øekl, že nepodporuje FileReader -> no chance here.)
