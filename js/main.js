@@ -27,14 +27,15 @@ var branching = 0;
 //nastaveni
 var isVertical = false;					//is vertical display choosed?
 var changeMaxTime = false;				//should i change maxTime?
-var showFrom = 0;						
-var showTo = 0;							
-var everywhereAxis = false;				//should i show axis everywhere?				
+var showFrom = 0;
+var showTo = 0;
+var everywhereAxis = false;				//should i show axis everywhere?
 var smallVisualisation = false;			//should i show small visualisation?
 var showLifeLengthText = true;			//should i show the text of legth of life?
 var showCellId = true;					//should i show the id of cell?
 var displayScale = true;
-			
+var showLine = true;
+
 //which font size is active?
 var activeFontId = 1;
 var activeFontLife = 1;
@@ -45,13 +46,17 @@ var linearScaleY;						//Linear scale for y axis
 var graphBoxWidth = 1000;				//width of graphBox
 var graphBoxHeightVertical = 890;		//Height of graph box for vertical display
 
+
+
+
+
 var description = ["BEGIN", "END", "DIVISION", "INTERPHASE"];
 
-//colors				 BEGIN  	END 	   MITOSIS    ALIVE  	 LINE     
+//colors				 BEGIN  	END 	   MITOSIS    ALIVE  	 LINE
 var colors = 			["#377eb8", "#e41a1c", "#4daf4a", "#984ea3", "#000000"];
 var colorsHovering = 	["#87b1d4", "#ee7576", "#94cf92", "#c194c7", "#666666"];
 
-var textHeight = ["12px", "14px", "16px", "18px", "20px"];	
+var textHeight = ["12px", "14px", "16px", "18px", "20px"];
 
 //Texts for dialog windows
 var helpBasic = "To display your data, load the file via <b>Load File</b> button above. Only <i><b>.txt</b></i> format is supported, and the data itself"
@@ -63,7 +68,7 @@ var helpBasic = "To display your data, load the file via <b>Load File</b> button
 				+ "<br><br>By clicking on <b>Font ID</b> or <b>Font Life</b> you will change the font height."
 				+ "<br><br>Clicking on <b>Time</b> or <b>Sort ID</b> buttons the whole graph will sort by the time or by the ids of cells"
 				+ "<br><br>Clicking on <b>Axes</b> you will switch between displaying only one main axis or axes to each cell graph."
-				+ "<br><br><b>SVG</b> button will save whole graph into svg - not working yet.";
+				+ "<br><br><b>SVG</b> button will save whole graph into svg. For converting SVG to PDF use: <a href=https://cloudconvert.com/>Cloud converter</a>";
 
 var helpGraphOfCells = "<b>The Graph of Cell Population</b> shows the lineage of all cells from the video."
 						+ "<br><br><b>Blue circles</b> (BEGIN) represents the frame (time), where the cell appeared for the first time. These circles are connected "
@@ -105,6 +110,10 @@ function disableAllButtons(value){
 	document.getElementById("svgSaver").disabled = value;
 }
 
+function disableSVGAxis(){
+	$(".axisSVG").toggle();
+}
+
 //preparing jquery
 $( document ).ready(function() {
     console.log( "jquery ready!" );
@@ -115,7 +124,7 @@ $('#file-input').inputFileText({
 );
 
 function showWarningDialog(){
-	
+
 	$( "#warningDialog" ).dialog({
       resizable: false,
       width:500,
@@ -130,7 +139,7 @@ function showWarningDialog(){
 }
 
 function showDivisionDialog(){
-	
+
 	$( "#divisionDialog" ).dialog({
       resizable: false,
       width:500,
@@ -220,16 +229,16 @@ function readSingleFile(e) {
   	}
 
   	var reader = new FileReader();
-  	reader.onload = function(e) {  
-  		var contents = e.target.result;  				
+  	reader.onload = function(e) {
+  		var contents = e.target.result;
   		parseData(contents);
   		changeMaxTime = true;
   		showFrom = 0;
-  		showTo = maxTime; 
+  		showTo = maxTime;
   		cellPopulation = $.map(cells, function (obj) {
                       return $.extend(true, {}, obj);
                   });
-  		horizontal();
+  		display();
   		sliderManager();
   		document.getElementById("cellInfo").innerHTML = "";
   		disableAllButtons(false);
@@ -240,18 +249,18 @@ function readSingleFile(e) {
   			showDivisionDialog();
 		}
 	};
-  
+
   reader.readAsText(file);
 }
 
 
 //Function will change the cell selection for display bassed on slider
 //@param	population 		array of cells, from which the functoin will do the selection
-function adjustPopulationSelection(population){	
+function adjustPopulationSelection(population){
 	var i = 0
 
 	//cycle checks if the first "root" cell is in the restriction time from slider
-	//YES: 		check if its children are in the restriction and store this "root" cell in cells 	
+	//YES: 		check if its children are in the restriction and store this "root" cell in cells
 	//NO: 		if cell has children, call this function with array of children
 	for(i; i < population.length; i++){
 		if((population[i].begin >= showFrom) && (population[i].begin <= showTo)){
@@ -260,7 +269,7 @@ function adjustPopulationSelection(population){
 		} else{
 			if(population[i].children.length != 0){
 				adjustPopulationSelection(population[i].children);
-			} 
+			}
 		}
 	}
 }
@@ -277,7 +286,7 @@ function adjustChildren(cell){
 			} else{
 				adjustChildren(cell.children[k]);
 			}
-		} 
+		}
 	}
 }
 
@@ -290,14 +299,14 @@ function checkFileName(name){
 	return str1.localeCompare(str2);
 }
 
-//Function will take string array (=input file), and store all "root" cells with its children (and children of its children...) 
+//Function will take string array (=input file), and store all "root" cells with its children (and children of its children...)
 //to "cells" array of cell objects
 //@param 	text 	string array of whole .txt file
-function parseData(text){			
+function parseData(text){
 	var tmpPole = [];												//temporary array for storing all 4 numbers of cell (id, begin, end, parent)
 	var tmpPromenna = "";											//temporary string for storing nummbers
-	var i = 0;														
-	var z = 0;														
+	var i = 0;
+	var z = 0;
 	index = 0;														//variable for storing information about parent
 
 	if(changeMaxTime){
@@ -306,7 +315,7 @@ function parseData(text){
 		changeMaxTime = false;
 	}
 
-	while(datacells.length > 0){		
+	while(datacells.length > 0){
 		datacells.pop();
 	}
 
@@ -317,7 +326,7 @@ function parseData(text){
 	//cycle will store each cell from text string into "tmpPole" as array with 4 values: [id,begin,end,parent]
 	for(i; i < text.length; i++){
 
-		if(text[i] == "\n"){										//is end of line?						
+		if(text[i] == "\n"){										//is end of line?
 			if(isNaN(+tmpPromenna)){
 				document.getElementById("p1").innerHTML = "Not supported data! In line " + (datacells.length + 1) + " there are not only numbers!";
 				showWarningDialog();
@@ -332,8 +341,8 @@ function parseData(text){
 			}
 
 			datacells.push(tmpPole);								//array is stored into "datacells"
-			tmpPole = [];											
-			tmpPromenna ="";										
+			tmpPole = [];
+			tmpPromenna ="";
 		}
 
 		else if(text[i] != " "){									//if it is not the break
@@ -348,16 +357,16 @@ function parseData(text){
 				throw new Error("Not supported data! - in row " + (datacells.length + 1) + " there are not only numbers!");
 			}
 			tmpPole.push(+tmpPromenna);								//the number is stored into tmpPole
-			tmpPromenna = "";										
+			tmpPromenna = "";
 		}
-	}	
+	}
 
 	//cycle will go through all cells in "datacells" array and create an array of "root" cells,
 	//which will have all its children (and children of its children...) stored inside its own array
 	for(z; z < datacells.length; z++){
-		tmpPole = datacells[z];										
+		tmpPole = datacells[z];
 		var parent;													//who's the parent
-				
+
 		//creating the new object of cell: ID, BEGIN TIME, END TIME, PARENT ID, ARRAY OF CHILDREN
 		var cell = {
 			id: tmpPole[0],
@@ -368,15 +377,15 @@ function parseData(text){
 		}
 
 		if(maxTime < cell.end){										//change the maxTime if the end time of cell is higher
-			maxTime = cell.end;				
+			maxTime = cell.end;
 		}
 
 
 		if(cell.parentID == 0){										//cell doesnt have parent ->
-			cells.push(cell);										//its the "root" cell! -> store it into cells (should be into cellPopulation, but i will create copy of it later)			
+			cells.push(cell);										//its the "root" cell! -> store it into cells (should be into cellPopulation, but i will create copy of it later)
 		}
-		else{														//cell has parent ->	
-			findParent(cell.parentID, cell, cells);					//it will be stored into children array of its parent					
+		else{														//cell has parent ->
+			findParent(cell.parentID, cell, cells);					//it will be stored into children array of its parent
 		}
 	}
 }
@@ -387,15 +396,15 @@ function parseData(text){
 //@param 	celles 		array of cells, where I look for parent
 
 function findParent(parentID, cell, celles){
-	var j = 0;														
-	for(j; j < celles.length; j++){								
+	var j = 0;
+	for(j; j < celles.length; j++){
 		if(celles[j].id == parentID){							//I found the parent!
-			celles[j].children.push(cell);						//store the cell into parent children array	
+			celles[j].children.push(cell);						//store the cell into parent children array
 			break;
-		}	
-		else if(celles[j].children != null){					//it is not the parent but it has children				
+		}
+		else if(celles[j].children != null){					//it is not the parent but it has children
 			findParent(parentID, cell, celles[j].children);		//try find the parent there!
-		}				
+		}
 	}
 }
 
@@ -412,47 +421,74 @@ function removeCells(){
 
 /**************************************************************
    BUTTONS
-***************************************************************/	
+***************************************************************/
 function changeFontId(){
 	if(activeFontId < 4){
-		activeFontId += 1;		
+		activeFontId += 1;
 	} else{
-		activeFontId = 0;		
+		activeFontId = 0;
 	}
 	display();
 }
 
 function changeFontLife(){
 	if(activeFontLife < 4){
-		activeFontLife += 1;		
+		activeFontLife += 1;
 	} else{
-		activeFontLife = 0;		
+		activeFontLife = 0;
 	}
 	display();
 }
 
 function changeFontText(){
 	if(activeFontText < 2){
-		activeFontText += 1;		
+		activeFontText += 1;
 	} else{
-		activeFontText = 0;		
+		activeFontText = 0;
 	}
 }
 
-function makePDF(){
-	console.log("Not working yet!");
+
+
+function makeSVG(){
+	if(!everywhereAxis){
+		disableSVGAxis();
+	}
+	var svg = document.getElementById("graphBoxSVG");
+	var serializer = new XMLSerializer();
+	var source = serializer.serializeToString(svg);
+	if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+    	source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+	}
+	if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+    	source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+	}
+	source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+	var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+
+	var saver = document.getElementById("downloadLink").href = url;
+	if(!everywhereAxis){
+		disableSVGAxis();
+	}
 }
 
 $("#idShow").click(function(){
         $(".idOfCell").toggle(400);
+        showCellId = !showCellId;
+        setTimeout(function() {makeSVG();  }, 500);
+
 });
 
 $("#lifeText").click(function(){
         $(".lengthOfLifeText").toggle(400);
+        showLifeLengthText = !showLifeLengthText;
+        setTimeout(function() {makeSVG();  }, 500);
 });
 
 $("#redLine").click(function(){
         $(".movingLine").toggle(400);
+        showLine = !showLine;
+        setTimeout(function() {makeSVG();  }, 500);
 });
 
 $("#axisEverywhere").click(function(){
@@ -487,25 +523,20 @@ $("#idSort").click(function(){
         sortById();
 });
 
-$("#svgSaver").click(function(){
-        console.log("Not working yet.");
-});
-
 function vertical(){
 	isVertical = true;
 	display();
 }
 
 function horizontal(){
-	isVertical = false;	
-	//everywhereAxis = false;	
+	isVertical = false;
 	display();
 }
 
 function axisEverywhere(){
 	everywhereAxis = !everywhereAxis;
 	display();
-}	
+}
 
 function changeScales(){
 	smallVisualisation = !smallVisualisation;
@@ -513,27 +544,29 @@ function changeScales(){
 		scaler = 10;
 		radius = 3;
 		stroke = 1.5;
-		
+
 		margin = 10;
 	}
 	else{
 		scaler = 50;
 		radius = 9;
 		stroke = 4;
-		
+
 		margin = 50;
 	}
 
 	if(displayScale){
 		display();
-	}	
+	}
 }
 
 function display(){
 	if(isVertical){
 		displayVertical();
+		makeSVG();
 	} else{
 		displayHorizontal();
+		makeSVG();
 	}
 }
 
@@ -548,7 +581,7 @@ function sortByTime(){
 			var keyD = b.id;
 			if(keyC < keyD) return -1;
     		if(keyC > keyD) return 1;
-    		return 0;    		
+    		return 0;
     	}
 	})
 
@@ -561,7 +594,7 @@ function sortById(){
 		var keyB = b.id;
 		if(keyA < keyB) return -1;
     	if(keyA > keyB) return 1;
-    	return 0;     	
+    	return 0;
 	})
 	display();
 }
@@ -572,8 +605,8 @@ function sortByIdSmth(cells){
 		var keyB = b.id;
 		if(keyA < keyB) return -1;
     	if(keyA > keyB) return 1;
-    	return 0;     	
-	})	
+    	return 0;
+	})
 }
 
 function lifeText(){
@@ -589,12 +622,12 @@ function sliderManager(){
 		max: maxTime,
 		values: [0, maxTime],
 		slide: function(event, ui) {
-			d3.select("#textMin").text("From: " + ui.values[ 0 ]);			
+			d3.select("#textMin").text("From: " + ui.values[ 0 ]);
 			d3.select("#textMax").text("To: " + ui.values[ 1 ]);
 			showFrom = ui.values[ 0 ];
 			showTo =  ui.values[ 1 ];
 
-			d3.selectAll(".superCell").each(function(d, i){									
+			d3.selectAll(".superCell").each(function(d, i){
 				if(this.__data__ < showFrom || this.__data__ > showTo){
 					d3.select(this).classed("superCell", false);
 					d3.select(this).classed("hide", true);
@@ -606,10 +639,10 @@ function sliderManager(){
 				if(this.__data__ >= showFrom && this.__data__ <= showTo){
 					d3.select(this).classed("hide", false);
 					d3.select(this).classed("superCell", true);
-					$(this).toggle(250);									
+					$(this).toggle(250);
 				}
 			})
-			
+
 		},
 		stop: function(event, ui){
 			removeCells();
@@ -637,7 +670,7 @@ function displayBeginToEndLine(cell, cellContainer, positionInGraph){
 		var childrenText = getChildrenText(cell);
 		var beginToEndLine = cellContainer.append("line")
 										  .classed("beginToEndLine", true)
-										  .on("mouseover", function() {							//Change color on hovering			
+										  .on("mouseover", function() {							//Change color on hovering
         										d3.select(this).attr("stroke", colorsHovering[4]);
       				  					  })
     				  					  .on("mouseout", function(){
@@ -669,7 +702,7 @@ function displayBeginToEndLine(cell, cellContainer, positionInGraph){
 //@param	cellContainer	svg container of the cell
 //@param	positionInGraph where to place the text in graph
 function displayLengthOfLife(cell, cellContainer, positionInGraph){
-		var timeDisplay = cellContainer.append("text").classed("lengthOfLifeText", true)		
+		var timeDisplay = cellContainer.append("text").classed("lengthOfLifeText", true).attr("font-family", "sans-serif").attr("font-weight", "bold")
     								   .text(function(){
     										var result = cell.end - cell.begin + 1;
     										if(result < 2 || (result < 5 && maxTime > 20)){
@@ -680,14 +713,14 @@ function displayLengthOfLife(cell, cellContainer, positionInGraph){
     										})
     								    .attr("font-size", textHeight[activeFontLife])
    										.attr("id", "life" + cell.id)
-   										.attr("fill", colors[3]); 
+   										.attr("fill", colors[3]);
    		if(isVertical){
    			timeDisplay.attr("x", positionInGraph - 18 - activeFontLife)
     				   .attr("y", linearScaleY((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
    		} else {
    			timeDisplay.attr("x", linearScaleX((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
-    				   .attr("y", positionInGraph + 15 + activeFontLife); 
-   		}    							 
+    				   .attr("y", positionInGraph + 15 + activeFontLife);
+   		}
 }
 
 //Function will display the Begin circle
@@ -703,12 +736,12 @@ function displayBegin(cell, cellContainer, positionInGraph){
     								.on("mouseout", function() {
          									d3.select(this).attr("fill", colors[0]);
     								})
-    								.on("click", function(){						
+    								.on("click", function(){
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
     									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
     													.html("BEGIN of Cell: <b>" + cell.id + "</b><br/>BEGIN in Frame: <b>" + cell.begin + "</b><br/>END in Frame: <b>" + cell.end + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
-    								}) 
-    								.attr("r", radius)   								
+    								})
+    								.attr("r", radius)
 			   						.attr("fill", colors[0]);
 
 	if(isVertical){
@@ -718,7 +751,7 @@ function displayBegin(cell, cellContainer, positionInGraph){
 	} else{
 		beginCircle.attr("cx", linearScaleX(cell.begin) + marginX/2)
 				   .attr("cy", positionInGraph);
-	}	
+	}
 }
 
 //Function will display the Begin circle
@@ -734,17 +767,17 @@ function displayBothBeginEnd(cell, cellContainer, positionInGraph){
     								.on("mouseout", function() {
          									d3.select(this).attr("fill", colors[0]);
     								})
-    								.on("click", function(){						
+    								.on("click", function(){
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
     									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
     													.html("BEGIN and END of Cell: <b>" + cell.id + "</b><br/>BEGIN and END in Frame: <b>" + cell.begin + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
-    								}) 
+    								})
     								.attr("r", function() {
     									if(smallVisualisation){
     										return radius + 2;
-    									} 
+    									}
     									return radius + 2;
-    								})   								
+    								})
 			   						.attr("fill", colors[0]);
 
 	var innerCircle = cellContainer.append("circle").classed("BeginCircle", true)
@@ -764,17 +797,17 @@ function displayBothBeginEnd(cell, cellContainer, positionInGraph){
 			   							return colors[1];
 			   						});
     								})
-    								.on("click", function(){						
+    								.on("click", function(){
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
     									d3.select("body").select(".cellInfo").append("text").attr("font-size", textHeight[activeFontText])
     													.html("BEGIN and END of Cell: <b>" + cell.id + "</b><br/>BEGIN and END in Frame: <b>" + cell.begin + "</b><br/>Parent: <b>" + cell.parentID + "</b><br/>Children: <b>" + childrenText+"</b>")
-    								}) 
+    								})
     								.attr("r", function() {
     									if(smallVisualisation){
     										return radius;
-    									} 
+    									}
     									return radius - 1;
-    								})   								
+    								})
 			   						.attr("fill", function(){
 			   							if(cell.children.length != 0){
 			   								return colors[2];
@@ -788,15 +821,15 @@ function displayBothBeginEnd(cell, cellContainer, positionInGraph){
 
 		innerCircle.attr("cx", positionInGraph)
 				   .attr("cy", linearScaleY(cell.begin)+ marginX/2);
-		
+
 
 	} else{
 		outerCircle.attr("cx", linearScaleX(cell.begin) + marginX/2)
 				   .attr("cy", positionInGraph);
 
 		innerCircle.attr("cx", linearScaleX(cell.begin) + marginX/2)
-				   .attr("cy", positionInGraph);		
-	}	
+				   .attr("cy", positionInGraph);
+	}
 }
 
 
@@ -807,9 +840,11 @@ function displayBothBeginEnd(cell, cellContainer, positionInGraph){
 function displayIdOfCell(cell, cellContainer, positionInGraph){
 	var idOfCell = cellContainer.append("text")
 								.attr("class", "idOfCell")
-								.text(cell.id)			   						
+								.text(cell.id)
 			   					.attr("font-size", textHeight[activeFontId])
-			   					.attr("text-anchor", "right");
+			   					.attr("text-anchor", "right")
+			   					.attr("font-family", "sans-serif")
+			   					.attr("font-weight", "bold");
 
 	if(isVertical){
 		idOfCell.attr("x", positionInGraph + 10)
@@ -820,7 +855,7 @@ function displayIdOfCell(cell, cellContainer, positionInGraph){
 	}
 }
 
-//Function will display the mitosis circle 
+//Function will display the mitosis circle
 //@param 	cell 			actual displaying cell
 //@param	cellContainer	svg container of the cell
 //@param	positionInGraph where to place the circle
@@ -833,7 +868,7 @@ function displayMitosis(cell, cellContainer, positionInGraph){
       							 	 })
     							 	 .on("mouseout", function() {
          								d3.select(this).attr("fill", colors[2]);
-    							 	 })	
+    							 	 })
     							 	 .on("click", function(){					//Po kliknuti se zobrazi info
     									d3.select("body").select(".cellInfo").selectAll("text").remove();
     									d3.select("body").select(".cellInfo").append("text")
@@ -842,7 +877,7 @@ function displayMitosis(cell, cellContainer, positionInGraph){
     							 	 })
     							 	 .attr("r", radius)
 			   					 	 .attr("fill", colors[2]);
-	
+
 	if(isVertical){
 		mitosisCircle.attr("cx", positionInGraph)
 					 .attr("cy", linearScaleY(cell.end) + marginX/2);
@@ -850,10 +885,10 @@ function displayMitosis(cell, cellContainer, positionInGraph){
 	} else{
 		mitosisCircle.attr("cx", linearScaleX(cell.end) + marginX/2)
 					 .attr("cy", positionInGraph);
-	}					
+	}
 }
 
-//Function will display the End circle 
+//Function will display the End circle
 //@param 	cell 			actual displaying cell
 //@param	cellContainer	svg container of the cell
 //@param	positionInGraph where to place the circle
@@ -882,7 +917,7 @@ function displayEnd(cell, cellContainer, positionInGraph){
     } else{
     	endCircle.attr("cx", linearScaleX(cell.end) + marginX/2)
 				 .attr("cy", positionInGraph);
-    }		   			
+    }
 }
 
 //Funkce, ktera vytvori linku spoje mezi bodem mitotickeho deleni a nove vyniklou bunkou
@@ -908,7 +943,7 @@ function connectParentChild(positionInGraph, ancestor, container, repairer, chil
 					.attr("y1", positionInGraph)
 					.attr("x2", linearScaleX(child.begin) + marginX/2)
 					.attr("y2", repairer);
-    }								
+    }
 }
 
 function highestNumberOfChildren(cellArray){
@@ -922,9 +957,9 @@ function highestNumberOfChildren(cellArray){
 			var highestOfChildren = highestNumberOfChildren(cellArray[i].children);
 			if(highestNumber < highestOfChildren){
 				highestNumber = highestOfChildren;
-			}			
+			}
 		}
-	}	
+	}
 	return highestNumber;
 }
 
@@ -936,26 +971,18 @@ function highestNumberOfChildren(cellArray){
 
 //Funkce, ktera zajisti, aby se vse vykreslilo Horizontalne
 function displayHorizontal(){
-	d3.selectAll("svg").remove();		
-	
-	var m = 0;							
+	d3.selectAll("svg").remove();
+	var m = 0;
 
 	linearScaleX = d3.scale.linear()								//Priprava linearScale pro osu X
 						.domain([0, maxTime])
 						.range([0, graphBoxWidth - marginX]);
-	
+
 	//Vykresli pouze hlavni osu
-	
-	if(!everywhereAxis || smallVisualisation){	 
-		displayXAxis();	
+	if(!everywhereAxis || smallVisualisation){
+		displayXAxis();
 	}
 	var tmpScaler = false;
-	/*
-	branching = highestNumberOfChildren(cells);
-	if(branching > 2 && !smallVisualisation){
-		tmpScaler = true;
-		changeScaleBranch(true);
-	}*/
 	var positionInGraphBoxSVG = 35;
 	widthOfGraphBox = widthOfGraphBoxSVG()  + positionInGraphBoxSVG;
 	if(everywhereAxis && !smallVisualisation){
@@ -964,10 +991,15 @@ function displayHorizontal(){
 
 	var graphBoxSVG = d3.select("body").select(".graphBox").append("svg")
 										.attr("width",  graphBoxWidth)
+										.attr("id", "graphBoxSVG")
 										.attr("height", widthOfGraphBox)
 										.attr("class", "graphBoxSVG")
 										.attr("version", 1.1)
         								.attr("xmlns", "http://www.w3.org/2000/svg");
+
+    svgXAxis();
+    disableSVGAxis();
+
 
 	//Vytvori prazdny SVG, aby se to vyrovnalo
 	displayBlock();
@@ -981,19 +1013,19 @@ function displayHorizontal(){
 		}
 		if(branching < 2){
 			branching = 2;
-		}		
-		var depth = depthFinder(cells[m]);	
+		}
+		var depth = depthFinder(cells[m]);
 		if(depth < 3){
 			depth = 2;
-		}		
+		}
 		var h = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);		//vyska daneho rodokmenu
-		
-		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id).attr("class", "svgContainer").attr("id", "svgContainer"+cells[m].id);		
-		
-		displayPopulation(cells[m], (h)/2 + positionInGraphBoxSVG, svgContainer, h/cells[m].children.length, positionInGraphBoxSVG);		//zavolani funkce, ktera to vykresli	
-		
-		//Vykresleni vlastni osy k dane populaci		
-		positionInGraphBoxSVG += h; 
+
+		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id).attr("class", "svgContainer").attr("id", "svgContainer"+cells[m].id);
+
+		displayPopulation(cells[m], (h)/2 + positionInGraphBoxSVG, svgContainer, h/cells[m].children.length, positionInGraphBoxSVG);		//zavolani funkce, ktera to vykresli
+
+		//Vykresleni vlastni osy k dane populaci
+		positionInGraphBoxSVG += h;
 		if(everywhereAxis && !smallVisualisation){
 			displayEverywhereXAxis(svgContainer, positionInGraphBoxSVG);
 			positionInGraphBoxSVG += 30;
@@ -1002,15 +1034,19 @@ function displayHorizontal(){
 			tmpScaler = false;
 			changeScaleBranch(false);
 		}
-		
-	}	
+
+	}
 	displayLineX(svgContainer, widthOfGraphBox);
+	if(!showLine){
+		$(".movingLine").toggle(0);
+	}
+	if(!showLifeLengthText){
+       	$(".lengthOfLifeText").toggle(0);
+    }
+    if(!showCellId){
+		$(".idOfCell").toggle(0);
+	}
 	getAdditionalData(positionLine);
-	/*
-	if(tmpScaler){
-		tmpScaler = false;
-		changeScaleBranch(false);
-	}		*/
 }
 
 //Funkce, ktera zjisti hloubku dane bunecne populace, pro spravne vetveni a zobrazeni v grafu
@@ -1045,51 +1081,53 @@ function depthFinder(cell){
 //@param	positionY		pozice Y, kde vykreslim aktualni bunku
 //@param	container 		SVG container, kam vykresluji
 //@param 	repairer		hodnota o kolik se maji potomci posunout
-function displayPopulation(cell, positionY, container, repairer, positionInGraphBoxSVG){	
-	var superCell = container.append("g").classed("superCell", true).datum(cell.begin);	
+function displayPopulation(cell, positionY, container, repairer, positionInGraphBoxSVG){
+	var superCell = container.append("g").classed("superCell", true).datum(cell.begin);
 	var tmpPosition = positionInGraphBoxSVG;
 	displayBeginToEndLine(cell, superCell, positionY);
-       
-    if(showLifeLengthText && !smallVisualisation){
+
+    if(!smallVisualisation){
        	displayLengthOfLife(cell, superCell, positionY);
-	} 
+       	
+	}
 
 	if(cell.end != cell.begin){
 		displayBegin(cell, superCell, positionY);
-	} 
-   				   								
-		
-	if(!smallVisualisation && showCellId){	
+	}
+
+
+	if(!smallVisualisation){
 		displayIdOfCell(cell, superCell, positionY);
+		
    	}
    	tmpPosition += repairer/2;
-   	if(cell.children.length != 0){			//pokud ma bunka potomky, vykreslim je  
-   		var i = 0;   		
-   		for(i; i < cell.children.length; i++){   			
-   			connectParentChild(positionY, cell, superCell, tmpPosition, cell.children[i]);   
-   			displayPopulation(cell.children[i], tmpPosition, container, (repairer/cell.children[i].children.length), tmpPosition - repairer/2);   			
+   	if(cell.children.length != 0){			//pokud ma bunka potomky, vykreslim je
+   		var i = 0;
+   		for(i; i < cell.children.length; i++){
+   			connectParentChild(positionY, cell, superCell, tmpPosition, cell.children[i]);
+   			displayPopulation(cell.children[i], tmpPosition, container, (repairer/cell.children[i].children.length), tmpPosition - repairer/2);
    			tmpPosition = tmpPosition + repairer;
    		}
 		if(cell.end != cell.begin){
-			displayMitosis(cell, superCell, positionY);		
-		} 
-	} else{	
+			displayMitosis(cell, superCell, positionY);
+		}
+	} else{
 		tmpPosition += repairer;
-	  	if(cell.end != maxTime && cell.end != cell.begin){	
+	  	if(cell.end != maxTime && cell.end != cell.begin){
    			displayEnd(cell, superCell, positionY);
 		}
-   	} 
+   	}
 
    	if(cell.end == cell.begin){
    		displayBothBeginEnd(cell, superCell, positionY);
    	}
-}  
+}
 
 //Vytvori maly prazdny svg blok
 function displayBlock(){
 	var svgBlok = d3.select("body").select(".graphBox").append("svg")
 									.attr("width", graphBoxWidth)
-									.attr("height", 30);											
+									.attr("height", 30);
 }
 
 //Funkce, ktera vykresli hlavni osu X
@@ -1106,7 +1144,7 @@ function displayXAxis(){
 							.range([0, maxTime]);
 
 	//Vytvoreni svg osy
-	
+
 	var svgAxis = d3.select("body").select(".graphBox").append("svg")
 									.attr("width", graphBoxWidth)
 									.attr("height", 35)
@@ -1131,9 +1169,47 @@ function displayXAxis(){
 			.call(xAxis);
 }
 
+//Funkce, ktera vykresli hlavni osu X
+function svgXAxis(){
+
+	//Scale pro osu
+	var xScale = d3.scale.linear()
+						.domain([0, maxTime])
+						.range([0, graphBoxWidth - marginX]);
+
+	//Scale pro linku
+	var lineScaler = d3.scale.linear()
+							.domain([0, graphBoxWidth - marginX])
+							.range([0, maxTime]);
+
+	//Vytvoreni svg osy
+
+	var svgAxis = d3.select(".graphBoxSVG").append("g").attr("class", "axisSVG")
+									.attr("width", graphBoxWidth)
+									.attr("height", 35)
+									.on("click", function(){
+										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)));
+	});
+
+	var numberOfTicks = 30;
+	if(maxTime < 30){
+		numberOfTicks = maxTime;
+	}
+
+	//variables for axis
+	var xAxis = d3.svg.axis()
+					.scale(xScale)
+					.orient("bottom")
+					.ticks(numberOfTicks);
+
+	svgAxis.append("g").attr("class", "axis")
+			.attr("transform", "translate("+ marginX/2 + "," + 5 + ")").attr("stroke", "black").attr("fill", "none")
+			.call(xAxis);
+}
+
 function displayLineX(svgContainer, height){
-	svgContainer.append("line")			
-			.attr("x1", linearScaleX(positionLine) + marginX/2)	
+	svgContainer.append("line")
+			.attr("x1", linearScaleX(positionLine) + marginX/2)
 			.attr("y1", 5)
 			.attr("x2", linearScaleX(positionLine) + marginX/2)
 			.attr("y2", height)
@@ -1144,8 +1220,8 @@ function displayLineX(svgContainer, height){
 }
 
 function displayLineY(svgContainer, height){
-	svgContainer.append("line")			
-			.attr("x1", 5)	
+	svgContainer.append("line")
+			.attr("x1", 5)
 			.attr("y1", linearScaleY(positionLine) + marginX/2)
 			.attr("x2", height)
 			.attr("y2", linearScaleY(positionLine) + marginX/2)
@@ -1157,7 +1233,7 @@ function displayLineY(svgContainer, height){
 
 //Function, which will change the position of the line in axis graph
 //@param 	position 	new position in the graph
-//@param 	svgAxis		axisGraph where the line is 
+//@param 	svgAxis		axisGraph where the line is
 function lineX(position){
 	//is position out of axis?
 	if(position > maxTime){
@@ -1166,8 +1242,8 @@ function lineX(position){
 		position = 0;
 	}
 
-	positionLine = position;	
-	
+	positionLine = position;
+
 	//change position of the line
 	d3.select("#movingLine")
 		.attr("x1", linearScaleX(positionLine) + marginX/2)
@@ -1184,18 +1260,18 @@ function displayEverywhereXAxis(svgContainer, position){
 
 	var lineScaler = d3.scale.linear()
 							.domain([0, graphBoxWidth - marginX])
-							.range([0, maxTime]);	
+							.range([0, maxTime]);
 
 	var svgAxis = svgContainer.append("svg").attr("class", "xAxis").on("click", function(){
 										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)));
-	});	
-	
+	});
+
 	svgAxis.append("rect")
     		.attr("width", graphBoxWidth)
     		.attr("height", 30)
     		.attr("transform", "translate("+ marginX/6 + "," + (5 + position) + ")")
     		.attr("fill", "white");
-    
+
 
     var numberOfTicks = 30;
 	if(maxTime < 30){
@@ -1210,7 +1286,7 @@ function displayEverywhereXAxis(svgContainer, position){
 
 	svgAxis.append("g")
 			.attr("class", "axis")
-			.attr("transform", "translate("+ marginX/2 + "," + (5 + position) + ")")
+			.attr("transform", "translate("+ marginX/2 + "," + (5 + position) + ")").attr("stroke", "black").attr("fill", "none")
 			.call(xAxis);
 }
 
@@ -1222,18 +1298,18 @@ function displayEverywhereYAxis(svgContainer, position){
 
 	var lineScaler = d3.scale.linear()
 							.domain([0, graphBoxHeightVertical - marginX])
-							.range([0, maxTime]);	
-	
+							.range([0, maxTime]);
+
 	var svgAxis = svgContainer.append("svg").attr("class", "yAxis").on("click", function(){
 										lineY(Math.round(lineScaler(d3.mouse(this)[1] - marginX/2 + 2)));
 	});
-	
+
 	svgAxis.append("rect")
     		.attr("width", 30)
     		.attr("height", graphBoxHeightVertical)
     		.attr("transform", "translate("+ (position - 20) + "," + 0 + ")")
     		.attr("fill", "white");
-    
+
 
     var numberOfTicks = 30;
 	if(maxTime < 30){
@@ -1248,14 +1324,14 @@ function displayEverywhereYAxis(svgContainer, position){
 
 	svgAxis.append("g")
 			.attr("class", "axis")
-			.attr("transform", "translate("+ (5 + position) + "," + marginX/2 + ")")
+			.attr("transform", "translate("+ (5 + position) + "," + marginX/2 + ")").attr("stroke", "black").attr("fill", "none")
 			.call(yAxis);
 }
 
 //Function will get the text list of children of the cell
 //@parent 	parent of the children
 //@return	text of children
-function getChildrenText(parent){	
+function getChildrenText(parent){
 	if(parent.children.length == 1){
 		return "" + parent.children[0].id;
 	}else if(parent.children.length == 2){
@@ -1300,7 +1376,7 @@ function widthOfGraphBoxSVG(){
 	}
 	return result;
 }
-		
+
 //Function will display Y axis of Vertical graph
 function displayYAxis(){
 
@@ -1322,12 +1398,12 @@ function displayYAxis(){
 									.on("click", function(){
 										lineY(Math.round(lineScaler(d3.mouse(this)[1] - marginX/2 + 2)));
 	});
-	
+
 	var numberOfTicks = 30;
 	if(maxTime < 30){
 		numberOfTicks = maxTime;
 	}
-							
+
 	//variables for axis
 	var yAxis = d3.svg.axis()
 					.scale(yScale)
@@ -1340,13 +1416,50 @@ function displayYAxis(){
 			.call(yAxis);
 }
 
+function svgYAxis(){
+
+	//Scale pro osu
+	var yScale = d3.scale.linear()
+						.domain([0, maxTime])
+						.range([0, graphBoxHeightVertical - marginX]);
+
+	//Scale pro linku
+	var lineScaler = d3.scale.linear()
+							.domain([0, graphBoxHeightVertical - marginX])
+							.range([0, maxTime]);
+
+	//Vytvoreni svg osy
+	var svgYAxis = d3.select(".graphBoxSVG").append("g").attr("class", "axisSVG")
+									.attr("width", 35)
+									.attr("height", graphBoxHeightVertical)
+									.on("click", function(){
+										lineY(Math.round(lineScaler(d3.mouse(this)[1] - marginX/2 + 2)));
+	});
+
+	var numberOfTicks = 30;
+	if(maxTime < 30){
+		numberOfTicks = maxTime;
+	}
+
+	//variables for axis
+	var yAxis = d3.svg.axis()
+					.scale(yScale)
+					.orient("left")
+					.ticks(numberOfTicks);
+
+	svgYAxis.append("g").attr("render-order", "1")
+			.attr("class", "axis")
+			.attr("transform", "translate("+ 30 + "," + marginX/2 + ")").attr("stroke", "black").attr("fill", "none")
+			.call(yAxis);
+}
+
 function changeScaleBranch(value){
 	if(value){
 		if(smallVisualisation){
 			scaler = 3;
 		} else{
 		scaler = 10;
-		}		
+		}
 	} else{
 		if(smallVisualisation){
 			scaler = 10;
@@ -1358,7 +1471,7 @@ function changeScaleBranch(value){
 
 //Function, which will change the position of the line in axis graph
 //@param 	position 	new position in the graph
-//@param 	svgAxis		axisGraph where the line is 
+//@param 	svgAxis		axisGraph where the line is
 function lineY(position){
 	//is position out of axis?
 	if(position > maxTime){
@@ -1377,25 +1490,18 @@ function lineY(position){
 	getAdditionalData(position);
 }
 
-function displayVertical(){	
-	d3.selectAll("svg").remove();	
-	var m = 0;	
+function displayVertical(){
+	d3.selectAll("svg").remove();
+	var m = 0;
 	linearScaleY = d3.scale.linear()							//scaler for vertical display
 						 .domain([0, maxTime])
-						 .range([0, graphBoxHeightVertical - marginX]);	
+						 .range([0, graphBoxHeightVertical - marginX]);
 
-	if(!everywhereAxis || smallVisualisation){	 
+	if(!everywhereAxis || smallVisualisation){
 		displayYAxis();
 	}
 
 	var tmpScaler = false;
-	/*
-	branching = highestNumberOfChildren(cells);
-	if(branching > 2 && !smallVisualisation){
-		tmpScaler = true;
-		changeScaleBranch(true);
-	}
-	*/
 	var positionInGraphBoxSVG = 35;
 
 	widthOfGraphBox = widthOfGraphBoxSVG()  + positionInGraphBoxSVG;
@@ -1407,34 +1513,38 @@ function displayVertical(){
 										.attr("width", widthOfGraphBox)
 										.attr("height", graphBoxHeightVertical)
 										.attr("class", "graphBoxSVG")
+										.attr("id", "graphBoxSVG")
 										.attr("version", 1.1)
         								.attr("xmlns", "http://www.w3.org/2000/svg");
 
-	for(m; m < cells.length; m++){	
+  svgYAxis();
+  disableSVGAxis();
+
+	for(m; m < cells.length; m++){
 		branching = highestNumberOfChildren([cells[m]]);
-		if(branching > 2){			
+		if(branching > 2){
 			tmpScaler = true;
 			changeScaleBranch(true);
 		}
 		if(branching < 2){
 			branching = 2;
 		}
-		
+
 		var depth = depthFinder(cells[m]);
 		if(depth < 3){
 			depth = 2;
 		}
-		var w = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu					
+		var w = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);			//vytvoreni sirky daneho svg rodokmenu
 
 		//Vytvoreni SVG containeru
 		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id);
 		if(everywhereAxis && !smallVisualisation){
 			displayEverywhereYAxis(svgContainer, positionInGraphBoxSVG);
-			
+
 		}
 
 		displayPopulation(cells[m], (w)/2 + positionInGraphBoxSVG, svgContainer, w/cells[m].children.length, positionInGraphBoxSVG);
-		positionInGraphBoxSVG += w; 
+		positionInGraphBoxSVG += w;
 
 		if(everywhereAxis && !smallVisualisation){
 			positionInGraphBoxSVG += 30;
@@ -1444,15 +1554,22 @@ function displayVertical(){
 			tmpScaler = false;
 			changeScaleBranch(false);
 		}
-		
+
 	}
+	
 	displayLineY(svgContainer, widthOfGraphBox);
+	
+	
+	if(!showLine){
+		$(".movingLine").toggle(0);
+	}
+	if(!showLifeLengthText){
+       	$(".lengthOfLifeText").toggle(0);
+    }
+    if(!showCellId){
+		$(".idOfCell").toggle(0);
+	}
 	getAdditionalData(positionLine);
-	/*
-	if(tmpScaler){
-		tmpScaler = true;
-		changeScaleBranch(true);
-	}*/
 }
 
 function svgTooltip(cell){
@@ -1484,7 +1601,7 @@ function getAdditionalData(position){
 	mitosis = 0;
 	death = 0;
 	var c = 0;
-	
+
 	while(lifeGraphCells.length > 0){
 		lifeGraphCells.pop();
 	}
@@ -1492,7 +1609,7 @@ function getAdditionalData(position){
 	//we will chceck all cells and get the data
 	for(c; c < cells.length; c++){
 		checkCell(cells[c], position);
-	}	
+	}
 
 	var dataStates = [begin, death, mitosis, lifeGraphCells.length];		//info about possible states\
 
@@ -1522,7 +1639,7 @@ function getAdditionalData(position){
 				.attr("y", (i * 25) + 20)
 				.attr("font-family", "sans-serif")
 				.attr("font-size", 15)
-				.attr("fill", "black");	
+				.attr("fill", "black");
 
 		life.append("text")
 				.text(description[i])
@@ -1530,8 +1647,8 @@ function getAdditionalData(position){
 				.attr("y", (i * 25) + 20 )
 				.attr("font-family", "sans-serif")
 				.attr("font-size", 15)
-				.attr("fill", "black");	
-	}	
+				.attr("fill", "black");
+	}
 
 	//Display life Graph of living cells
 	d3.select('#deleteLife').remove();
@@ -1545,7 +1662,7 @@ function displayLifeGraph(){
 	var c = 0;
 	var lifeLinearX = d3.scale.linear().domain([0, maxTime]).range([0, 310]);
 
-	sortByIdSmth(lifeGraphCells);	
+	sortByIdSmth(lifeGraphCells);
 
 	var lifeHeight = lifeGraphCells.length*20 + 20;
 
@@ -1619,14 +1736,14 @@ function displayLifeGraph(){
 							return c * 20 + 25;
 						})
 						.attr("stroke-width", 1)
-						.attr("stroke", "black");	
+						.attr("stroke", "black");
 
 		var lifeEndText = lifeContainer.append("text")
 										.text(lifeGraphCells[c].end)
 										.attr("x", lifeLinearX(lifeGraphCells[c].end) + 25 + margLife)
 			   							.attr("y", c * 20 + 25)
 			   							.attr("font-family", "sans-serif")
-   										.attr("font-size", textHeight[activeFontText]);	
+   										.attr("font-size", textHeight[activeFontText]);
 	}
 
 	var wholeLine = lifeContainer.append("line")
@@ -1640,7 +1757,7 @@ function displayLifeGraph(){
 							.attr("stroke", "#e41a1c");
 }
 
-//Function will save info about cell in certain time 
+//Function will save info about cell in certain time
 //@param	cell 		cell we want to know info about
 //@param	position 	in what time we want to know what is happening
 function checkCell(cell, position){
@@ -1660,13 +1777,13 @@ function checkCell(cell, position){
 	}
 
 	//or was it alive?
-	else if(((position > cell.begin) && (position < cell.end)) || ((cell.end == position) && (cell.end == maxTime))){	
+	else if(((position > cell.begin) && (position < cell.end)) || ((cell.end == position) && (cell.end == maxTime))){
 		lifeGraphCells.push(cell);
 	}
 
 
 	//check what happend to its children
-	else{		
+	else{
 		if((cell.children.length > 0) && (position > cell.end)){
 			var d = 0;
 			for(d; d<cell.children.length; d++){
