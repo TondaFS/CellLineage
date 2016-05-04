@@ -628,7 +628,7 @@ function sliderManager(){
 			showTo =  ui.values[ 1 ];
 
 			d3.selectAll(".superCell").each(function(d, i){
-				if(this.__data__ < showFrom || this.__data__ > showTo){
+				if(this.__data__[1] < showFrom || this.__data__[0] > showTo){
 					d3.select(this).classed("superCell", false);
 					d3.select(this).classed("hide", true);
 					$(this).toggle(250);
@@ -636,7 +636,7 @@ function sliderManager(){
 			})
 
 			d3.selectAll(".hide").each(function(d, i){
-				if(this.__data__ >= showFrom && this.__data__ <= showTo){
+				if(this.__data__[1] >= showFrom && this.__data__[0] <= showTo){
 					d3.select(this).classed("hide", false);
 					d3.select(this).classed("superCell", true);
 					$(this).toggle(250);
@@ -1082,7 +1082,7 @@ function depthFinder(cell){
 //@param	container 		SVG container, kam vykresluji
 //@param 	repairer		hodnota o kolik se maji potomci posunout
 function displayPopulation(cell, positionY, container, repairer, positionInGraphBoxSVG){
-	var superCell = container.append("g").classed("superCell", true).datum(cell.begin);
+	var superCell = container.append("g").classed("superCell", true).datum([cell.begin, cell.end]);
 	var tmpPosition = positionInGraphBoxSVG;
 	displayBeginToEndLine(cell, superCell, positionY);
 
