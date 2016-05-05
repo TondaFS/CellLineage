@@ -263,7 +263,7 @@ function adjustPopulationSelection(population){
 	//YES: 		check if its children are in the restriction and store this "root" cell in cells
 	//NO: 		if cell has children, call this function with array of children
 	for(i; i < population.length; i++){
-		if((population[i].begin >= showFrom) && (population[i].begin <= showTo)){
+		if((population[i].begin >= showFrom && population[i].begin <= showTo) || (population[i].end >= showFrom && population[i].end <= showTo)){
 			adjustChildren(population[i]);
 			cells.push(population[i]);
 		} else{
@@ -1007,15 +1007,17 @@ function displayHorizontal(){
 	//Vykresleni vsech bunecnych populaci
 	for(m; m < cells.length; m++){
 		branching = highestNumberOfChildren([cells[m]]);
-		if(branching > 2){
+		if((branching > 3) ||(cells[m].children.length > 3)){
 			tmpScaler = true;
 			changeScaleBranch(true);
+			console.log("Branching of " + cells[m].id + " is " + branching);
 		}
 		if(branching < 2){
 			branching = 2;
 		}
 		var depth = depthFinder(cells[m]);
-		if(depth < 3){
+		
+		if(depth < 2){
 			depth = 2;
 		}
 		var h = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);		//vyska daneho rodokmenu
@@ -1364,11 +1366,12 @@ function widthOfGraphBoxSVG(){
 		if(tmpDepth < 3){
 			tmpDepth = 2;
 		}
-		if(branching > 2){
+		if(branching > 3){
 			tmpScaler = true;
 			changeScaleBranch(true);
 		}
 		result += Math.pow(branching,  tmpDepth) * scaler - scaler*(tmpDepth-1);
+		console.log("B: " + cells[i].id + " " +result);
 		if(tmpScaler){
 			tmpScaler = false;
 			changeScaleBranch(false);
