@@ -44,7 +44,7 @@ var activeFontText = 1;
 var linearScaleX;										//Linear scale for X axis
 var linearScaleY;										//Linear scale for y axis
 var graphBoxWidth = 1000;								//width of graphBox
-var graphBoxHeightVertical = 890;						//Height of graph box for vertical display
+var graphBoxHeightVertical = 860;						//Height of graph box for vertical display
 
 var description = ["BEGIN", "END", "DIVISION", "INTERPHASE"];
 
@@ -94,17 +94,16 @@ var interestingInfoText = "<br><b>Actual frame: </b>";
 /***************************************************************
 					INITIAL PREPARATIONS
 ***************************************************************/
-disableAllButtons(true);								//disable all buttons except help and load at start
-
 //preparing jquery
 $(document).ready(function() {
     //console.log( "jquery ready!" );
 });
 
+/*
 //change text of load button
 $('#file-input').inputFileText({
     text: 'Load File'}
-);
+);*/
 
 //set controling of the red line via keyboard
 $(document).keydown(function(e) {
@@ -144,7 +143,12 @@ $( "#dialog" ).dialog({
     }
 });
 
-
+//disable all buttons except help and load
+disableButtons();
+/*
+$("#help").prop('disabled', false);
+$("#dialog").dialog("option", "buttons", removeAttr("disabled"));
+*/
 
 /**************************************************************
 	LOAD DATA
@@ -183,7 +187,7 @@ function readSingleFile(e) {
   		display();
   		sliderManager();
   		document.getElementById("cellInfo").innerHTML = "";
-  		disableAllButtons(false);
+  		enableAllButtons();
 		branching = highestNumberOfChildren(cellPopulation);
 		if(branching > 5){
 			document.getElementById("p2").innerHTML = "Abnormal division is higher than 5! Visualisation may look weird... <br>The highest divison: " + branching;
@@ -444,35 +448,30 @@ function adjustPopulationSelection(population){
 ///
 
 //HELP
-$( "#helpBasic" ).click(function() {
-   	document.getElementById("helpText").innerHTML = helpBasic;
-    $( "#dialog" ).dialog( "open" );
-});
-$( "#helpGraphOfCells" ).click(function() {
-   	document.getElementById("helpText").innerHTML = helpGraphOfCells;
-    $( "#dialog" ).dialog( "open" );
-});
-$( "#helpGraphOfStates" ).click(function() {
-   	document.getElementById("helpText").innerHTML = helpGraphOfStates;
-    $( "#dialog" ).dialog( "open" );
-});
 
 
-function changeFontId(){
-	if(activeFontId < 4){
-		activeFontId += 1;
-	} else{
-		activeFontId = 0;
-	}
+function helpButtonBasic(){
+	document.getElementById("helpText").innerHTML = helpBasic;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpCells(){
+	document.getElementById("helpText").innerHTML = helpGraphOfCells;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpStates(){
+	document.getElementById("helpText").innerHTML = helpGraphOfStates;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function changeFontId(value){
+	activeFontId = value;
 	display();
 }
 
-function changeFontLife(){
-	if(activeFontLife < 4){
-		activeFontLife += 1;
-	} else{
-		activeFontLife = 0;
-	}
+function changeFontLife(value){
+	activeFontLife = value;
 	display();
 }
 
@@ -513,68 +512,25 @@ function makeSVG(){
 	}
 }
 
-//show ID
-$("#idShow").click(function(){
-        $(".idOfCell").toggle(400);
+
+
+function toggleID(){
+	$(".idOfCell").toggle(400);
         showCellId = !showCellId;
         setTimeout(function() {makeSVG();  }, 500);
+}
 
-});
-
-//Show length of life
-$("#lifeText").click(function(){
+function toggleLife(){	
         $(".lengthOfLifeText").toggle(400);
         showLifeLengthText = !showLifeLengthText;
         setTimeout(function() {makeSVG();  }, 500);
-});
+}
 
-//show main red line
-$("#redLine").click(function(){
+function toggleLine(){	
         $(".movingLine").toggle(400);
         showLine = !showLine;
         setTimeout(function() {makeSVG();  }, 500);
-});
-
-//show axis everywhere
-$("#axisEverywhere").click(function(){
-        axisEverywhere();
-});
-
-//change to vertical
-$("#vertical").click(function(){
-        vertical();
-});
-
-//change to horizontal
-$("#horizontal").click(function(){
-        horizontal();
-});
-
-//change the font of ID
-$("#fontID").click(function(){
-        changeFontId();
-});
-
-//change font of Life length
-$("#changeLife").click(function(){
-        changeFontLife();
-});
-
-//change scales
-$("#changeScale").click(function(){
-        changeScales();
-});
-
-//sort by time
-$("#timeSort").click(function(){
-        sortByTime();
-});
-
-//sort by ID
-$("#idSort").click(function(){
-        sortById();
-});
-
+}
 
 //
 //	Functions for buttons
@@ -892,7 +848,7 @@ function displayIdOfCell(cell, cellContainer, positionInGraph){
 		idOfCell.attr("x", positionInGraph + 10)
 			   	.attr("y", linearScaleY(positionBegin) + marginX - 7);
 	} else{
-		idOfCell.attr("x", linearScaleX(positionBegin) + marginX - 15)
+		idOfCell.attr("x", linearScaleX(positionBegin) + marginX - 20)
 			   	.attr("y", positionInGraph - 10);
 	}
 }
@@ -1796,7 +1752,7 @@ function displayLifeGraph(){
 
 		var lifeBeginText = lifeContainer.append("text")
 										.text(lifeGraphCells[c].begin)
-										.attr("x", lifeLinearX(lifeGraphCells[c].begin) - 5 + margLife)
+										.attr("x", lifeLinearX(lifeGraphCells[c].begin) - 10 + margLife)
 			   							.attr("y", c * 20 + 25)
 			   							.attr("font-family", "sans-serif")
    										.attr("font-size", textHeight[activeFontText]);
@@ -1841,12 +1797,12 @@ function displayLifeGraph(){
 //@param	position 	in what time we want to know what is happening
 function checkCell(cell, position){
 	//was cell born?
-	if(cell.begin == position){
+	if(cell.begin == position && (cell.begin >= showFrom && cell.begin <= showTo)){
 			begin++;
 	}
 
 	//Or was it its death or mitosis?
-	if((cell.end == position) && (cell.end != maxTime)){
+	if((cell.end == position) && (cell.end != maxTime) && (cell.end >= showFrom && cell.end <= showTo)){
 		if(cell.children.length > 0){
 			mitosis++;
 		}
@@ -1857,7 +1813,9 @@ function checkCell(cell, position){
 
 	//or was it alive?
 	else if(((position > cell.begin) && (position < cell.end)) || ((cell.end == position) && (cell.end == maxTime))){
-		lifeGraphCells.push(cell);
+		if(position >= showFrom && position <= showTo){
+			lifeGraphCells.push(cell);
+		}
 	}
 
 
@@ -1877,19 +1835,16 @@ function checkCell(cell, position){
 /**************************************************************
    OTHER FUNCTIONS
 ***************************************************************/
-function disableAllButtons(value){
-	document.getElementById("horizontal").disabled = value;
-	document.getElementById("vertical").disabled = value;
-	document.getElementById("axisEverywhere").disabled = value;
-	document.getElementById("idShow").disabled = value;
-	document.getElementById("lifeText").disabled = value;
-	document.getElementById("redLine").disabled = value;
-	document.getElementById("fontID").disabled = value;
-	document.getElementById("changeLife").disabled = value;
-	document.getElementById("changeScale").disabled = value;
-	document.getElementById("timeSort").disabled = value;
-	document.getElementById("idSort").disabled = value;
-	document.getElementById("svgSaver").disabled = value;
+function enableAllButtons(){
+	$('button').prop('disabled', false);
+}
+
+function disableButtons(){
+	$("#disable").prop('disabled', true);
+	$("#svgSaver").prop('disabled', true);
+	$("#fontchanger").prop('disabled', true);
+	$("#sortcells").prop('disabled', true);
+	$("#displayOptions").prop('disabled', true);
 }
 
 function disableSVGAxis(){
