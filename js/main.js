@@ -5,7 +5,7 @@ var maxTime = 0;										//highest end time in file
 var margin = 50;										//margin of SVG - it changes during change of scale
 var marginX = 50;										//margin for X - doesnt change at all
 var margLife = 60;										//margin for LifeGraph
-var radius = 9;											//radius
+var radius = 8.5;											//radius
 var stroke = 4;											//stroke of lines
 var scaler = 50;										//scale on axis
 var positionLine = 0;									//position of line in axis
@@ -55,37 +55,70 @@ var colorsHovering = 	["#87b1d4", "#ee7576", "#94cf92", "#c194c7", "#666666"];
 var textHeight = ["12px", "14px", "16px", "18px", "20px"];
 
 //Texts for dialog windows
-var helpBasic = "To display your data, load the file via <b>Load File</b> button above. Only <i><b>.txt</b></i> format is supported, and the data itself"
-				+ " have to be in defined style. <br>Which means: every line should have 4 numbers separated by space. These number are: ID, BEGIN, END and PARENT."
-				+ "<br><br>After choosing the file, the app will display the <b>Graph of Cell Population</b>. More info about that in the next <b>HELP</b> button."
-				+ "<br><br>You can switch the <i>vertical</i> and <i>horizontal</i> display by clicking on the appropriate buttons."
-				+ "<br><br>You can also switch display of full and minimalistic graph by clicking on <b>Scale</b> button."
-				+ "<br><br>By clicking on <b>ID</b>, <b>Life</b> and <b>Line</b> buttons you will show/hide descriptions or the red line in the graph."
-				+ "<br><br>By clicking on <b>Font ID</b> or <b>Font Life</b> you will change the font height."
-				+ "<br><br>Clicking on <b>Time</b> or <b>Sort ID</b> buttons the whole graph will sort by the time or by the ids of cells"
-				+ "<br><br>Clicking on <b>Axes</b> you will switch between displaying only one main axis or axes to each cell graph."
-				+ "<br><br><b>SVG</b> button will save whole graph into svg. For converting SVG to PDF use: <a href=https://cloudconvert.com/svg-to-pdf>Cloud converter</a>";
+var helpLoad =  "<h4><b>LOAD FILE</b></h4>"
+				+ "To display your data, load the file using this button. Only <i><b>.txt</b></i> format is supported, and the data itself"
+				+ " have to be in defined style."
+				+ "<br> Which means: every line should have 4 numbers separated by space. These numbers are: ID, BEGIN, END and PARENT."
+				+ "<br>The app will than display the <i>Graph of Cell Population</i>. More information about this graph is in the separate help button.";
 
-var helpGraphOfCells = "<b>The Graph of Cell Population</b> shows the lineage of all cells from the video."
-						+ "<br><br><b>Blue circles</b> (BEGIN) represents the frame (time), where the cell appeared for the first time. These circles are connected "
-						+ "via black line with <b>Red</b> (END) or <b>Green</b> (DIVISION) circles. These represents the last time of cell in the video. If it is <b>red</b>"
-						+ " it means the cell died. If it is <b>green</b> it means the cell has at least one descendant."
-						+ "<br><br> Each cell has it's <b>ID</b> besides it's blue circle. Above the black line is showed the number of frames the cell was alive."
-						+ "<br><br> The graph can be restricted by handlers of the <b>slider</b> in the top. By moving, the graph will check if the BEGIN frame"
-						+ " of the cell belongs to the chosen selection. If not, the graph will adapt and remove all unapropriate cells. By moving handlers back, "
-						+ "the hidden cells will show up again (after \"dropping\" the handler)."
-						+ "<br><br>By clickinkg on the elements in the graph, the info about that elements and the cells will show up on the right."
-						+ "<br><br>There is also the axis with red line. Values represents the frames (time) and the red line the specific frame (time) in the video."
-						+ "By clicking on the axis, the line will change it's position to the chosen frame. Also the additional information about things that occured "
-						+ "in that frame - <b>The Graph of States</b> and <b>Graph of Life</b> - will show up on the right. More info about these graphs in next HELP button."
-						+ "<br>You can change the position of the red line also by pressing the <i>left</i> and <i>right</i> arrow keys.";
+var helpDisplay = "<h4><b>DISPLAY</b></h4>"
+				+ "This button has four different options to use while displaying your data. They are divided into the two sections. <i>Orientation of graph</i> and <i>Additional options</i>."
+				+ "<br><br><b>Orientation of graph</b>"
+				+ "<br><b><i>Horizontal: </i></b>This button will allow you to display <i>Graph of Cell Population</i> horizontally. It is also the default orientation of displaying populations."
+				+ "<br><b><i>Vertical: </i></b>This button will allow you to display <i>Graph of Cell Population</i> vertically."
+				+ "<br><br><b>Additional options</b>"
+				+ "<br><b><i>Toggle Miniature Visualisation: </i></b>This button will allow you to switch between default and small versions of the <i>Graph of Cell Population</i>."
+				+ "<br><b><i>Toggle Axis/Axes: </i></b>With this button you can choose, if just only the one main axis will be shown, or if each cell lineage will have its own axis.";
 
-var helpGraphOfStates = "<b>The Graph of States</b> and <b>Graph of Life</b> shows additional information about cells in certain frame."
-						+ "<br><br><b>The Graph of States</b> shows what happened in the time specified by the red line. It will provide information about"
-						+ "number of cells which BEGAN in the given frame, number of cells which END, number of DIVISIONS and also number of currently LIVING cells."
-						+ "These cells are than represented in the Graph of Life."
-						+ "<br><br><b>The Graph of Life</b> shows the minimalistic line of life of currently living cells. Each line belongs to the one cell, which ID is shown"
-						+ "on the left side of the black line. Next to the both ends are the frame numbers of BEGIN and END frame of the cell.";
+var helpSort = "<h4><b>SORT CELLS</b></h4>"
+				+ "This button has two possible options for sorting cell lineages."
+				+ "<br><br><b><i>By their ID: </i></b>This otpion will sort the cell lineages upwordly by the ID's of the root cells."
+				+ "<br><b><i>By their BEGIN time: </i></b>This option will sort the cell lineages upwordly by the BEGIN times of the root cells.";
+
+var helpFont = "<h4><b>FONT</b></h4>"
+				+ "With these options you can separately change the font size of either the cell ID's or Lengths of cells in interphase.";
+
+var helpDisable = "<h4><b>DISABLE</b></h4>"
+				+ "With options in this menu you can toggle the elements which are displayed in the <i>Graph of Cell Population</i>. These elements are: <i>ID's of cells, Length of cells in interphase"
+				+ " </i>and<i> the red line</i>."
+				+ "<br><br><b>ID of cell:</b> ID of cell displays near the BEGIN circle of the cell. In case the BEGIN circle is not in the restricted time based on slider, it shows near the beginning "
+				+ "of the line, which connects BEGIN and END circles."
+				+ "<br><br><b>Length of cells in interphase:</b> This number is displayd near the middle of the line connecting BEGIN and END circles of cell. In case the line is restricted with slider,"
+				+ " the number won't show up."
+				+ "<br><br><b>Red line: </b>Line goes through the whole <i>Graph of Cell Population</i> and indicates the actual selected frame and events (BEGIN, END, DIVISION, INTERPHASE) which happened during this frame.";
+
+var helpSVG = "<h4><b>SAVE AS SVG</b></h4>"
+				+ "This button gives you option to save the whole <i>Graph of Cell Population</i> with all enabled elements as <b><i>.svg</i></b> file. To disable some of the elements, use the <i>Disable</i> button."
+				+ "<br><br> For converting SVG to PDF you can use: <a href=https://cloudconvert.com/svg-to-pdf>Cloud converter</a>";
+
+var helpGraphOfCells = "<h4><b>GRAPH OF CELL POPULATION</b></h4>"
+						+ "This graph shows the lineage of all cells from the video."
+						+ "<br><br><b>Blue</b> (BEGIN) circles represents the frame (time), where the cell appeared for the first time. These circles are connected "
+						+ "by black line with <b>Red</b> (END) or <b>Green</b> (DIVISION) circles. These represents the last time of cell in the video.<br>If it is <b>red</b>"
+						+ " it means the cell died or went outside recordered area. <br>If it is <b>green</b> it means the cell had at least one descendant and underwent division."
+						+ "<br><br> Each cell has it's <b>ID</b> besides it's BEGIN circle or if the blue circle is missing due to restriction by slider, it's near the beginning of the black line."
+						+ "<br>Above the black line is showed the length of cell in <i>interphase</i> (number of frames the cell was in the video)."						
+						+ "<br><br>By clickinkg on the elements in the graph, the info about that element and the cell will show up on the right.";
+
+var helpGraphOfStates = "<h4><b>GRAPH OF STATES</b></h4>"
+						+ "This graph shows what happened in the frame specified by the red line. It will provide information about"
+						+ " number of cells which BEGAN in the given frame, number of cells which END, number of DIVISIONS and also number of cells currently in the INTERPHASE - "
+						+ "these cells are than represented in the <i>Graph of Cells in Interphase</i>.";
+						
+
+var helpGraphOfInterphase = "<h4><b>GRAPH OF CELLS IN INTERPHASE</b></h4>"
+						+ "This graph shows the minimalistic line of cells currently in the INTERPHASE. <br><br>Each line belongs to the one cell, which ID is shown"
+						+ " on the left side of the black line. Next to the both ends are the frame numbers of BEGIN and END times of the cell.";
+
+var helpSlider = "<h4><b>SLIDER</b></h4>"
+						+ "The <i>Graph if Cell Population</i> can be restricted by handlers of the <b>slider</b> in the top. By moving the handlers, the graph will check if the cell"
+						+ " belongs to the chosen selection. If not, the graph will adapt and remove all unapropriate cells. By moving handlers back, "
+						+ "the hidden cells will show up again (after \"dropping\" the handler).";
+var helpAxes = "<h4><b>AXES</b></h4>"
+						+ "Each axis represents the number of frames in the video. <br>The red line represents the specific frame in that video."
+						+ "<br><br>By clicking on any of the axes, the red line will change its position to that selected frame. By that, the red line will indicate what events happened in this specific frame."
+						+ " Based on that the <i>Graph of States</i> and <i>Graph of Cells in Interphase</i> will be displayd."
+						+ "<br><br>The position of the red line can be changed also by pressing the <b>left</b> and <b>right</b> arrow keys.";
 
 var interestingInfoText = "<br><b>Actual frame: </b>";
 
@@ -98,12 +131,6 @@ var interestingInfoText = "<br><b>Actual frame: </b>";
 $(document).ready(function() {
     //console.log( "jquery ready!" );
 });
-
-/*
-//change text of load button
-$('#file-input').inputFileText({
-    text: 'Load File'}
-);*/
 
 //set controling of the red line via keyboard
 $(document).keydown(function(e) {
@@ -131,8 +158,8 @@ $(document).keydown(function(e) {
 //Prepare dialog for HELP
 $( "#dialog" ).dialog({
     autoOpen: false,
-    width:800,
-    height:700,
+    width:700,
+    height:500,
     show: {
         effect: "blind",
         duration: 500
@@ -145,10 +172,8 @@ $( "#dialog" ).dialog({
 
 //disable all buttons except help and load
 disableButtons();
-/*
-$("#help").prop('disabled', false);
-$("#dialog").dialog("option", "buttons", removeAttr("disabled"));
-*/
+
+
 
 /**************************************************************
 	LOAD DATA
@@ -443,15 +468,49 @@ function adjustPopulationSelection(population){
 /**************************************************************
    						BUTTONS
 ***************************************************************/
-///
-///	Reactions on clicking the buttons
-///
 
-//HELP
+function helpLoadButton(){
+	document.getElementById("helpText").innerHTML = helpLoad;
+    $( "#dialog" ).dialog( "open" );
+}
 
+function helpDisplayButton(){
+	document.getElementById("helpText").innerHTML = helpDisplay;
+    $( "#dialog" ).dialog( "open" );
+}
 
-function helpButtonBasic(){
-	document.getElementById("helpText").innerHTML = helpBasic;
+function helpSortButton(){
+	document.getElementById("helpText").innerHTML = helpSort;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpFontButton(){
+	document.getElementById("helpText").innerHTML = helpFont;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpDisableButton(){
+	document.getElementById("helpText").innerHTML = helpDisable;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpSVGButton(){
+	document.getElementById("helpText").innerHTML = helpSVG;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpSliderButton(){
+	document.getElementById("helpText").innerHTML = helpSlider;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpAxesButton(){
+	document.getElementById("helpText").innerHTML = helpAxes;
+    $( "#dialog" ).dialog( "open" );
+}
+
+function helpInterphaseButton(){
+	document.getElementById("helpText").innerHTML = helpGraphOfInterphase;
     $( "#dialog" ).dialog( "open" );
 }
 
@@ -512,8 +571,6 @@ function makeSVG(){
 	}
 }
 
-
-
 function toggleID(){
 	$(".idOfCell").toggle(400);
         showCellId = !showCellId;
@@ -562,7 +619,7 @@ function changeScales(){
 	}
 	else{
 		scaler = 50;
-		radius = 9;
+		radius = 8.5;
 		stroke = 4;
 
 		margin = 50;
@@ -703,9 +760,10 @@ function displayLengthOfLife(cell, cellContainer, positionInGraph){
     										})
     								    .attr("font-size", textHeight[activeFontLife])
    										.attr("id", "life" + cell.id)
-   										.attr("fill", colors[3]);
+   										.attr("fill", colors[3])
+   										.attr("text-align", "right");
    		if(isVertical){
-   			timeDisplay.attr("x", positionInGraph - 18 - activeFontLife)
+   			timeDisplay.attr("x", positionInGraph - 23 - activeFontLife)
     				   .attr("y", linearScaleY((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
    		} else {
    			timeDisplay.attr("x", linearScaleX((cell.end - cell.begin)/2 + cell.begin) + marginX/2)
@@ -1116,15 +1174,17 @@ function displayEverywhereXAxis(svgContainer, position){
 							.domain([0, graphBoxWidth - marginX])
 							.range([0, maxTime]);
 
-	var svgAxis = svgContainer.append("svg").attr("class", "xAxis").on("click", function(){
+	var svgAxis = svgContainer.append("svg")						
+							.attr("class", "xAxis")
+							.on("click", function(){
 										lineX(Math.round(lineScaler(d3.mouse(this)[0] - marginX/2 + 2)));
-	});
+							});
 
 	svgAxis.append("rect")
     		.attr("width", graphBoxWidth)
     		.attr("height", 30)
     		.attr("transform", "translate("+ marginX/6 + "," + (5 + position) + ")")
-    		.attr("fill", "white");
+    		.attr("opacity", 0);
 
 
     var numberOfTicks = 30;
@@ -1138,7 +1198,7 @@ function displayEverywhereXAxis(svgContainer, position){
 					.ticks(numberOfTicks);
 
 	svgAxis.append("g")
-			.attr("class", "axis")
+			.attr("class", "axis")			
 			.attr("transform", "translate("+ marginX/2 + "," + (5 + position) + ")")
 			.call(xAxis);
 	axisStyling();	
@@ -1325,7 +1385,15 @@ function displayHorizontal(){
 		}
 
 		//height of this cell graph
-		var h = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);		
+		var h = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);
+
+		if(cells[m].children.length == 0){
+			if(smallVisualisation){
+				h = 10;
+			} else{
+				h = 45;
+			}
+		}		
 
 		//preparation of container for this population
 		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id).attr("class", "svgContainer").attr("id", "svgContainer"+cells[m].id);
@@ -1491,11 +1559,17 @@ function displayPopulation(cell, positionY, container, repairer, positionInGraph
 
    	if(cell.children.length != 0){			//cell has children -> draw them before continuing
    		var i = 0;
-   		for(i; i < cell.children.length; i++){
-   			connectParentChild(positionY, cell, superCell, tmpPosition, cell.children[i]);
-   			displayPopulation(cell.children[i], tmpPosition, container, (repairer/cell.children[i].children.length), tmpPosition - repairer/2);
+   		if(cell.children.length == 1){
+   			connectParentChild(positionY, cell, superCell, tmpPosition - repairer/4, cell.children[i]);
+   			displayPopulation(cell.children[i], tmpPosition - repairer/4, container, (repairer/cell.children[i].children.length), tmpPosition - repairer/2);
    			tmpPosition = tmpPosition + repairer;
-   		}
+   		} else{
+   			for(i; i < cell.children.length; i++){
+   				connectParentChild(positionY, cell, superCell, tmpPosition, cell.children[i]);
+   				displayPopulation(cell.children[i], tmpPosition, container, (repairer/cell.children[i].children.length), tmpPosition - repairer/2);
+   				tmpPosition = tmpPosition + repairer;
+   			}
+   		}   		
 		if(cell.end != cell.begin && (cell.end <=showTo)){
 			displayMitosis(cell, superCell, positionY);
 		}
@@ -1582,22 +1656,30 @@ function widthOfGraphBoxSVG(){
 	var tmpScaler = false;
 	//adding width of every graph to the result
 	for(i; i < cells.length; i++){
-		branching = highestNumberOfChildren([cells[i]]);
-		if(branching < 2){
-			branching = 2;
-		}
-		var tmpDepth = depthFinder(cells[i]);
-		if(tmpDepth < 3){
-			tmpDepth = 2;
-		}
-		if(branching > 3){
-			tmpScaler = true;
-			changeScaleBranch(true);
-		}
-		result += Math.pow(branching,  tmpDepth) * scaler - scaler*(tmpDepth-1);
-		if(tmpScaler){
-			tmpScaler = false;
-			changeScaleBranch(false);
+		if(cells[i].children.length == 0){
+			if(smallVisualisation){
+				result += 10;
+			} else{
+				result += 45;
+			}			
+		} else{
+			branching = highestNumberOfChildren([cells[i]]);
+			if(branching < 2){
+				branching = 2;
+			}
+			var tmpDepth = depthFinder(cells[i]);
+			if(tmpDepth < 3){
+				tmpDepth = 2;
+			}
+			if(branching > 3){
+				tmpScaler = true;
+				changeScaleBranch(true);
+			}
+			result += Math.pow(branching,  tmpDepth) * scaler - scaler*(tmpDepth-1);
+			if(tmpScaler){
+				tmpScaler = false;
+				changeScaleBranch(false);
+			}
 		}
 	}
 	return result;

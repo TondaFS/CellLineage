@@ -7,8 +7,7 @@
 		<script src="js/d3.js"></script>
 		<script src="js/math.min.js"></script> 
                 <script src="js/jquery-1.12.2.min.js"></script>
-                <script src="js/jquery-ui.min.js"></script> 
-                <script src="js/jquery-input-file-text.js"></script>                  
+                <script src="js/jquery-ui.min.js"></script>                  
                 <script src="js/bootstrap.min.js"></script>        
 		<link rel="stylesheet" href="css/styl.css" />   
                 <link rel="stylesheet" href="css/jquery-ui.min.css" />
@@ -37,7 +36,7 @@
                                                 <li><a href="#" onclick="vertical()">Vertical</a></li>
                                                 <li class="divider"></li>
                                                 <li class="dropdown-header">Additional options</li>
-                                                <li><a href="#" onclick="changeScales()">Miniature Visualisation</a></li>
+                                                <li><a href="#" onclick="changeScales()">Toggle Miniature Visualisation</a></li>
                                                 <li><a href="#" onclick="axisEverywhere()">Toggle Axis/Axes</a></li>
                                         </ul>
                                 </div> 
@@ -88,9 +87,22 @@
                                         <button type="button" id="help" class="btn btn-info dropdown-toggle btn-sm" data-toggle="dropdown">
                                         HELP <span class="caret"></span></button>
                                         <ul class="dropdown-menu" role="menu">
-                                                <li><a href="#" onclick="helpButtonBasic()">Basic</a></li>
-                                                <li><a href="#" onclick="helpCells()">Graph of Cells</a></li>
-                                                <li><a href="#" onclick="helpStates()">Graph of Cells</a></li>
+                                                <li class="dropdown-header">MENU</li>  
+                                                <li><a href="#" onclick="helpLoadButton()">Load File</a></li>
+                                                <li><a href="#" onclick="helpDisplayButton()">Display</a></li>
+                                                <li><a href="#" onclick="helpSortButton()">Sort Cells</a></li>
+                                                <li><a href="#" onclick="helpFontButton()">Font</a></li>
+                                                <li><a href="#" onclick="helpDisableButton()">Disable</a></li>
+                                                <li><a href="#" onclick="helpSVGButton()">Save as SVG</a></li>
+                                                <li class="divider"></li>
+                                                <li class="dropdown-header">GRAPHS</li> 
+                                                <li><a href="#" onclick="helpCells()">Graph of Cell Population</a></li>
+                                                <li><a href="#" onclick="helpStates()">Graph of States</a></li>
+                                                <li><a href="#" onclick="helpInterphaseButton()">Graph of Cells in Interphase</a></li>
+                                                <li class="divider"></li>
+                                                <li class="dropdown-header">INTERACTIVITY</li> 
+                                                <li><a href="#" onclick="helpSliderButton()">Slider</a></li>
+                                                <li><a href="#" onclick="helpAxesButton()">Axes</a></li>
                                         </ul>
                                 </div>
 
@@ -119,7 +131,7 @@
                         <div id="divisionDialog" title="High abnormal division detected!">
                                 <p id="p2"></p>                        
                         </div>
-                        <div id="dialog" title="Cell Visualisation"><p id="helpText"></p></div>  
+                        <div id="dialog" title="Cell Visualisation - HELP"><p id="helpText"></p></div>  
 
 
 
