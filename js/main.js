@@ -1386,14 +1386,14 @@ function displayHorizontal(){
 
 		//height of this cell graph
 		var h = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);
-
+		/*
 		if(cells[m].children.length == 0){
 			if(smallVisualisation){
 				h = 10;
 			} else{
 				h = 45;
 			}
-		}		
+		}	*/	
 
 		//preparation of container for this population
 		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id).attr("class", "svgContainer").attr("id", "svgContainer"+cells[m].id);
@@ -1489,13 +1489,14 @@ function displayVertical(){
 		//width of this cell graph
 		var w = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);			
 
+		/*
 		if(cells[m].children.length == 0){
 			if(smallVisualisation){
 				w = 10;
 			} else{
-				w = 45;
+				w = 50;
 			}
-		}
+		}*/
 
 		//create svg container
 		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id);
@@ -1567,17 +1568,19 @@ function displayPopulation(cell, positionY, container, repairer, positionInGraph
 
    	if(cell.children.length != 0){			//cell has children -> draw them before continuing
    		var i = 0;
+   		
    		if(cell.children.length == 1){
    			connectParentChild(positionY, cell, superCell, tmpPosition - repairer/4, cell.children[i]);
    			displayPopulation(cell.children[i], tmpPosition - repairer/4, container, (repairer/cell.children[i].children.length), tmpPosition - repairer/2);
    			tmpPosition = tmpPosition + repairer;
    		} else{
+   			
    			for(i; i < cell.children.length; i++){
    				connectParentChild(positionY, cell, superCell, tmpPosition, cell.children[i]);
    				displayPopulation(cell.children[i], tmpPosition, container, (repairer/cell.children[i].children.length), tmpPosition - repairer/2);
    				tmpPosition = tmpPosition + repairer;
    			}
-   		}   		
+   		}  		
 		if(cell.end != cell.begin && (cell.end <=showTo)){
 			displayMitosis(cell, superCell, positionY);
 		}
@@ -1664,13 +1667,7 @@ function widthOfGraphBoxSVG(){
 	var tmpScaler = false;
 	//adding width of every graph to the result
 	for(i; i < cells.length; i++){
-		if(cells[i].children.length == 0){
-			if(smallVisualisation){
-				result += 10;
-			} else{
-				result += 45;
-			}			
-		} else{
+		
 			branching = highestNumberOfChildren([cells[i]]);
 			if(branching < 2){
 				branching = 2;
@@ -1688,7 +1685,7 @@ function widthOfGraphBoxSVG(){
 				tmpScaler = false;
 				changeScaleBranch(false);
 			}
-		}
+		
 	}
 	return result;
 }
