@@ -44,7 +44,7 @@ var activeFontText = 1;
 var linearScaleX;										//Linear scale for X axis
 var linearScaleY;										//Linear scale for y axis
 var graphBoxWidth = 1000;								//width of graphBox
-var graphBoxHeightVertical = 860;						//Height of graph box for vertical display
+var graphBoxHeightVertical = 840;						//Height of graph box for vertical display
 
 var description = ["BEGIN", "END", "DIVISION", "INTERPHASE"];
 
@@ -1730,7 +1730,7 @@ function getAdditionalData(position){
 
 	var dataStates = [begin, death, mitosis, lifeGraphCells.length];		//info about possible states\
 
-	document.getElementById("interestingInfoText").innerHTML = interestingInfoText + positionLine;
+	document.getElementById("interestingInfoText").innerHTML = interestingInfoText + positionLine +  " ";
 
 	d3.selectAll(".stats").remove();
 

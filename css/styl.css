@@ -1,6 +1,6 @@
 .buttons{
 	float:left;
-	width: 600px;
+	width: 550px;
 	height: 40px;
 	margin-right: 5px;
 	margin-left: 5px;
@@ -62,8 +62,8 @@
 .graphBox{
 	clear:both;
 	float:left;
-	width: 1020px;
-	height: 880px;
+	width: 1025px;
+	height: 870px;
 	position: relative;
 	top: 40px;
 	overflow-x: scroll;
@@ -91,8 +91,8 @@
 .lifeGraph{
 	margin-top: 10px;
 	top: 280px;
-	width: 450px;
-	height: 650px;
+	width: 460px;
+	height: 600px;
 	overflow-y: scroll;
 	overflow: auto;
 }

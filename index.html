@@ -24,11 +24,11 @@
 
 		<div class="option">  
                         <div class="buttons"> 
-                                <span class="btn btn-danger btn-sm btn-file">
+                                <span class="btn btn-default btn-sm btn-file">
                                         Load File<input type="file" id="file-input">                                        
                                 </span> 
                                 <div class="btn-group">
-                                        <button type="button" id="displayOptions" class="btn btn-primary dropdown-toggle btn-sm" data-toggle="dropdown">
+                                        <button type="button" id="displayOptions" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown">
                                         Display <span class="caret"></span></button>
                                         <ul class="dropdown-menu" role="menu">
                                                 <li class="dropdown-header">Orientation of graph</li>
@@ -41,15 +41,15 @@
                                         </ul>
                                 </div> 
                                 <div class="btn-group">
-                                        <button type="button" id="sortcells" class="btn btn-primary dropdown-toggle btn-sm" data-toggle="dropdown">
+                                        <button type="button" id="sortcells" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown">
                                         Sort Cells <span class="caret"></span></button>
                                         <ul class="dropdown-menu" role="menu">
-                                                <li><a href="#" onclick="sortById()">By their ID</a></li>
-                                                <li><a href="#" onclick="sortByTime()">By their BEGIN time</a></li>
+                                                <li><a href="#" onclick="sortById()">By ID</a></li>
+                                                <li><a href="#" onclick="sortByTime()">By BEGIN time</a></li>
                                         </ul>
                                 </div> 
                                 <div class="btn-group">
-                                        <button type="button" id="fontchanger" class="btn btn-success dropdown-toggle btn-sm" data-toggle="dropdown">
+                                        <button type="button" id="fontchanger" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown">
                                         Font <span class="caret"></span></button>
                                         <ul class="dropdown-menu" >
                                                 <li class="dropdown-header">Size of ID</li>
@@ -70,21 +70,21 @@
 
 
                                 <div class="btn-group">
-                                        <button type="button" id="disable" class="btn btn-success dropdown-toggle btn-sm" data-toggle="dropdown">
+                                        <button type="button" id="disable" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown">
                                         Disable <span class="caret"></span></button>
                                         <ul class="dropdown-menu" role="menu">
                                                 <div class="toggleBox">
                                                 <li><div class="checkbox"><label><input type="checkbox" onclick="toggleID()" id="idCheck" value="">ID</label></div></li>
-                                                <li><div class="checkbox"><label><input type="checkbox" onclick="toggleLife()" value="">Lenght of Life</label></div></li>
+                                                <li><div class="checkbox"><label><input type="checkbox" onclick="toggleLife()" value="">Length of Life</label></div></li>
                                                 <li><div class="checkbox"><label><input type="checkbox" onclick="toggleLine()" value="">Red Line</label></div></li></a>
                                                 </div>                                          
                                         </ul>
                                 </div>                           
                                                               
-                                        <a class="downloadLink" id="downloadLink" download="cellVisualisation.svg"><button class="btn btn-warning btn-sm" id="svgSaver">Save as SVG</button></a>
+                                        <a class="downloadLink" id="downloadLink" download="cellVisualisation.svg"><button class="btn btn-default btn-sm" id="svgSaver">Save as SVG</button></a>
                                 
                                 <div class="btn-group">
-                                        <button type="button" id="help" class="btn btn-info dropdown-toggle btn-sm" data-toggle="dropdown">
+                                        <button type="button" id="help" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown">
                                         HELP <span class="caret"></span></button>
                                         <ul class="dropdown-menu" role="menu">
                                                 <li class="dropdown-header">MENU</li>  
