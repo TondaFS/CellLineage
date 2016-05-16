@@ -1489,6 +1489,14 @@ function displayVertical(){
 		//width of this cell graph
 		var w = (Math.pow(branching,  depth) * scaler) - margin*(depth-1);			
 
+		if(cells[m].children.length == 0){
+			if(smallVisualisation){
+				w = 10;
+			} else{
+				w = 45;
+			}
+		}
+
 		//create svg container
 		var svgContainer = d3.select("body").select(".graphBoxSVG").append("g").datum(cells[m].id);
 		if(everywhereAxis && !smallVisualisation){
